@@ -1,0 +1,3 @@
+name	fastq1
+test1	raw_data/a1.fastq.gz
+test2	raw_data/a2_1.fastq.gz
