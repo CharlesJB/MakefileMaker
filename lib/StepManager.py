@@ -50,9 +50,9 @@ class StepInfos:
         if not isinstance(self.dependencies, list):
             msg += "StepInfos: param \"dependencies\" should be a list.\n"
             error = True
-        elif len(self.dependencies) < 1:
-            msg += "StepInfos: param \"dependencies\" should contains at least one FileList.\n"
-            error = True
+#        elif len(self.dependencies) < 1:
+#            msg += "StepInfos: param \"dependencies\" should contains at least one FileList.\n"
+#            error = True
         else:
             for dependency in self.dependencies:
                 if not isinstance(dependency, FileList):
@@ -82,28 +82,35 @@ class StepInfos:
 
 class StepManager:
     def __init__(self, sample_manager):
-        self.steps = []
+        self.steps_info = []
         self.step_names = []
         self.sample_manager = sample_manager
         self._valid()
 
     def register_step(self, step_name, suffix, dir_name, dependency_names, pair_data, merge_data):
         self._validate_register_params(step_name, suffix, dir_name, dependency_names)
-#        outputs = self._generate_outputs(step_name, suffix, dir_name, pair_data, merge_data)
-        outputs = self.sample_manager
+        outputs = self.sample_manager.generate_outputs(dir_name, suffix, pair_data, merge_data)
+        dependencies = self._get_dependencies(dependency_names)
         step_infos = StepInfos(step_name, dir_name, dependencies, outputs, pair_data, merge_data)
-        self.steps.append(step_infos)
+        self.steps_info.append(step_infos)
         self.step_names.append(step_name)
+
+    def _get_dependencies(self, dependency_names):
+        dependencies = []
+        for name in dependency_names:
+            i = self.step_names.index(name)
+            dependencies += self.steps_info[i].get_outputs()
+        return(dependencies)
 
     def _valid(self):
         error = False
         msg = "StepManager object is in invalid state.\n"
-        if not isinstance(self.steps, list):
-            msg += "self.steps is not a list.\n"
+        if not isinstance(self.steps_info, list):
+            msg += "self.steps_info is not a list.\n"
             error = True
         else:
-            for step in self.steps:
-                if not isinstance(step, StepInfo):
+            for step_info in self.steps_info:
+                if not isinstance(step_info, StepInfo):
                     msg += "step in self.steps is not a StepInfo\n"
                     error = True
         if not isinstance(self.step_names, list):
@@ -124,7 +131,7 @@ class StepManager:
             sys.stderr.write(msg)
             sys.exit(1)
 
-    def _validate_register_params(self, step_name, names, suffix, dir_name, dependency_names):
+    def _validate_register_params(self, step_name, suffix, dir_name, dependency_names):
         error = False
         msg = ""
         if not isinstance(step_name, basestring):
@@ -133,21 +140,10 @@ class StepManager:
         elif len(step_name) < 1:
             msg += "register_step: step_name length should be greater than 0.\n"
             error = True
-        if not isinstance(names, list):
-            msg += "register_step: names should be a list.\n"
-            error = True
-        else:
-            for name in names:
-                if not isinstance(name, basestring):
-                    msg += "register_step: name in names should be string.\n"
-                    error = True
-                elif len(name) < 1:
-                    msg += "register_step: name in names length should be greater than 0.\n"
-                    error = True
         if not isinstance(suffix, basestring):
             msg += "register_step: suffix param should be a string.\n"
             error = True
-        elif len(step_name) < 1:
+        elif len(suffix) < 1:
             msg += "register_step: suffix length should be greater than 0.\n"
             error = True
         if not isinstance(dir_name, basestring):
