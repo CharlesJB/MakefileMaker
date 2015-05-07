@@ -90,6 +90,7 @@ class StepManager:
     def register_step(self, step_name, suffix, dir_name, dependency_names, pair_data, merge_data):
         self._validate_register_params(step_name, suffix, dir_name, dependency_names)
 #        outputs = self._generate_outputs(step_name, suffix, dir_name, pair_data, merge_data)
+        outputs = self.sample_manager
         step_infos = StepInfos(step_name, dir_name, dependencies, outputs, pair_data, merge_data)
         self.steps.append(step_infos)
         self.step_names.append(step_name)
@@ -118,6 +119,10 @@ class StepManager:
                     error = True
         if not isinstance(self.sample_manager, SampleManager):
             msg += "self.sample_manager is not a SampleManager.\n"
+            error = True
+        if error == True:
+            sys.stderr.write(msg)
+            sys.exit(1)
 
     def _validate_register_params(self, step_name, names, suffix, dir_name, dependency_names):
         error = False

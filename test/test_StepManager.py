@@ -89,8 +89,12 @@ VALID_PAIR_FALSE = False
 VALID_MERGE_TRUE = True
 VALID_MERGE_FALSE = False
 
-def test_step_infos_manager_constructor_valid_params():
+def test_step_manager_constructor_valid_params():
     sm = StepManager(VALID_SAMPLE_MANAGER)
     eq_(sm.steps, [])
     eq_(sm.step_names, [])
     eq_(isinstance(sm.sample_manager, SampleManager), True)
+
+@raises(SystemExit)
+def test_step_manager_constructor_invalid_sample_manager_type():
+    StepManager(1)
