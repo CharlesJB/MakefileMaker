@@ -28,6 +28,14 @@ class FileList:
     def get_name(self):
         return(self.name)
 
+    def unlist(self):
+        files = []
+        for file_list in self.file_list:
+            files.append(file_list[0])
+            if len(file_list[1]) > 0:
+                files.append(file_list[1])
+        return(files)
+
     def _valid(self):
         correct = True
         msg = ""

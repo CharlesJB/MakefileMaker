@@ -78,6 +78,14 @@ def test_filelist_get_name():
     fl = FileList(VALID_FILELIST_FULL, VALID_NAME)
     eq_(fl.get_name(), VALID_NAME)
 
+def test_filelist_unlist_full():
+    fl = FileList(VALID_FILELIST_FULL, VALID_NAME)
+    eq_(fl.unlist(), ['a','b','c','d'])
+
+def test_filelist_unlist_partial():
+    fl = FileList(VALID_FILELIST_EMPTY_KEY_2, VALID_NAME)
+    eq_(fl.unlist(), ['a','b','c'])
+
 
 # TESTS: SampleManager
 
