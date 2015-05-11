@@ -84,11 +84,6 @@ class SampleManager:
             else:
                 self._add_line(line)
 
-#    def _parse_config(self):
-#        if self.params["config"] is not None:
-#            config = self.params["config"]
-#            if "symlinks" in config.sections():
-
     def _check_colnames(self, colnames):
         error = False
         msg = ""
