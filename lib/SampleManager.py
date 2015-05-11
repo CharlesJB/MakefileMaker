@@ -6,75 +6,7 @@
 import sys
 import os
 
-class FileList:
-    def __init__(self, file_list, name):
-        self.file_list = file_list
-        self.name = name
-        self._valid()
-
-    def get_files(self, i):
-        try:
-            files = self.file_list[i]
-        except:
-            msg = "FileList.get_files: invalid index.\n"
-            sys.stderr.write(msg)
-            sys.exit(1)
-        if len(files[1]) == 0:
-            to_return = []
-            to_return.append(files[0])
-            return(to_return)
-        return(files)
-
-    def get_name(self):
-        return(self.name)
-
-    def unlist(self):
-        files = []
-        for file_list in self.file_list:
-            files.append(file_list[0])
-            if len(file_list[1]) > 0:
-                files.append(file_list[1])
-        return(files)
-
-    def _valid(self):
-        correct = True
-        msg = ""
-        if not isinstance(self.name, basestring):
-            msg += "FileList: name param should be a string.\n"
-            correct = False
-        elif len(self.name) < 1:
-            msg += "FileList: name param should be at least 1 character long.\n"
-            correct = False
-        if not isinstance(self.file_list, list):
-            msg += "FileList: file_list param should be a list.\n"
-            correct = False
-        else:
-            if len(self.file_list) < 1:
-                msg += "FileList: file_list does not contain entry.\n"
-                correct = False
-            else:
-                for key in self.file_list:
-                    if self._validate_key(key) == False:
-                        msg += "FileList: At least one key is incorrectly formatted.\n"
-                        correct = False
-        if correct == False:
-            sys.stderr.write(msg)
-            sys.exit(1)
-        
-
-    def _validate_key(self, key):
-        correct = True
-        if not isinstance(key, list):
-            correct = False
-        elif len(key) != 2:
-            correct = False
-        else:
-            for entry in key:
-                if not isinstance(entry, basestring):
-                    correct = False
-            if len(key[0]) < 1:
-                correct = False
-        return(correct)
+from lib.FileList import *
 
 # This is a class to parse samplesheets.
 #
@@ -115,61 +47,16 @@ class SampleManager:
         self.raw_files_r2 = {}
         self.idx = {}
 
-    def generate_outputs(self, dir_name, suffix, pair, merge):
-        outputs = []
-        for name in self.raw_files_r1.keys():
-            outputs.append(self._generate_output(name, dir_name, suffix, pair, merge))
-        return(outputs)
-
-    def _generate_output(self, name, dir_name, suffix, pair, merge):
-        output = []
-        pair1 = self.raw_files_r1[name]
-        pair2 = self.raw_files_r2[name]
-        if merge == False:
-            count = 1
-            for i, _ in enumerate(pair1):
-                current_name_1 = dir_name + "/"
-                current_name_1 += name + "_" + str(count)
-                current_name_2 = ""
-                if pair == False:
-                    current_name_1 += "_R1"
-                    if len(pair2[i]) > 0:
-                        current_name_2 = current_name_1[:-1] + "2"
-                        current_name_2 += suffix
-                current_name_1 += suffix
-                output.append([current_name_1, current_name_2])
-                count += 1
+    def get_file_list(self, name):
+        if name not in self.raw_files_r1:
+            return None
         else:
-            current_name_1 = dir_name + "/"
-            current_name_1 += name
-            current_name_2 = ""
-            if pair == False:
-                current_name_1 += "_R1"
-                if len(pair2[0]) > 0:
-                    current_name_2 = current_name_1[:-1] + "2"
-                    current_name_2 += suffix
-            current_name_1 += suffix
-            output.append([current_name_1, current_name_2])
-        return(FileList(output, name))
-
-    def _validate_outputs_param(self, dir_name, suffix, pair, merge):
-        error = False
-        msg = "SampleManager: generate_outputs invalid params:\n"
-        if not self._check_string(dir_name):
-            msg += "dir_name is incorrect.\n"
-            error = True
-        if not self._check_string(suffix):
-            msg += "suffix is incorrect.\n"
-            error = True
-        if not isinstance(pair, bool):
-            msg += "pair is incorrect\n"
-            error = True
-        if not isinstance(merge, bool):
-            msg += "merge is incorrect\n"
-            error = True
-        if error == True:
-            sys.stderr.write(msg)
-            sys.exit(1)
+            fastq1 = self.raw_files_r1[name]
+            fastq2 = self.raw_files_r2[name]
+            file_list = []
+            for i, _ in enumerate(fastq1):
+                file_list.append([fastq1[i], fastq2[i]])
+            return(FileList(file_list, name))
 
     def _check_string(self, string):
         correct = True
