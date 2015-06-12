@@ -1,0 +1,7 @@
+name	fastq1	fastq2
+C2PT	raw_data/C2PT1_1.fastq.gz	raw_data/C2PT1_2.fastq.gz
+C2PT	raw_data/C2PT2_1.fastq.gz	raw_data/C2PT2_2.fastq.gz
+C2PF	raw_data/C2PF1_1.fastq.gz
+C2PF	raw_data/C2PF2_1.fastq.gz
+C1PT	raw_data/C1PT_1.fastq.gz	raw_data/C1PT_2.fastq.gz
+C1PF	raw_data/C1PF_1.fastq.gz

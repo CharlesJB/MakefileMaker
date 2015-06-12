@@ -8,29 +8,266 @@ import os
 
 from lib.FileList import *
 
-class OutputManager:
+# 4 letter code to represent the IO status of current step:
+# merged: sample was merged on a previous step
+# paired: sample was paired on a previous step
+# merge: sample will be merged in current step
+# pair: sample will be paired in current step
+## merged/paired/merge/pair
+## FFFF
+## FFFT
+## FFTF
+## FTFF
+## TFFF
+## FFTT
+## TFFT
+## FTTF
+## TTFF
+
+# code count_status/pair_status of the raw data for a sample:
+# count_status refers to files that are splitted (i.e.: on multiple lane)
+# pair_status refers to paired files (paired_end sequencing)
+## C2PT: 2 or more files , paired
+## C2PF: 2 or more files, not paired
+## C1PT: 1 file, paired
+## C1PF: 1 file, not paired
+
+class IOManager:
     def __init__(self, raw_files):
         self.raw_files = raw_files
-        self.paired = False
-        self.merged = False
-        self._valid()
+        self._validate_raw_files()
 
-    def get_files_1(self, name = None, merge = False):
-        return(self._get_files(0, name, merge))
+    def generate_input(self, name, merged, paired, merge, pair):
+        if name not in self.raw_files:
+            msg = "generate_input: invalid name"
+            sys.stderr.write(msg)
+            sys.exit(1)
 
-    def get_files_2(self, name = None, merge = False):
-        return(self._get_files(1, name, merge))
+        if paired and pair or merged and merge:
+            msg = "generate_input: invalid combination of arguments."
+            sys.stderr.write(msg)
+            sys.exit(1)
 
-    def generate_outputs(self,  pair = False, merge = False):
-        self._validate_outputs_param(pair, merge)
-        self._validate_flags(pair, merge)
-        self.paired = pair
-        self.merged = merge
+        results = []
+        paired_status = self.raw_files[name].get_paired_status()
+        count = self.raw_files[name].get_file_count()
 
-        outputs = {}
-        for name in self.raw_files.keys():
-            outputs[name] = self._generate_output(name)
-        return(outputs)
+        # C2PT
+        if count > 1 and paired_status:
+            # FFFF
+            if not merged and not paired and not merge and not pair:
+                for i in range(1, count + 1):
+                    file_R1 = name + "_" + str(i) + "_R1"
+                    file_R2 = name + "_" + str(i) + "_R2"
+                    file_list_R1 = FileList([[file_R1, '']])
+                    file_list_R2 = FileList([[file_R2, '']])
+                    results.append(file_list_R1)
+                    results.append(file_list_R2)
+            # FFFT
+            elif not merged and not paired and not merge and pair:
+                for i in range(1, count + 1):
+                    file_R1 = name + "_" + str(i) + "_R1"
+                    file_R2 = name + "_" + str(i) + "_R2"
+                    file_list = FileList([[file_R1, file_R2]])
+                    results.append(file_list)
+            # FFTF
+            elif not merged and not paired and merge and not pair:
+                files_R1 = []
+                files_R2 = []
+                for i in range(1, count + 1):
+                    files_R1.append([name + "_" + str(i) + "_R1", ''])
+                    files_R2.append([name + "_" + str(i) + "_R2", ''])
+                file_list_R1 = FileList(files_R1)
+                file_list_R2 = FileList(files_R2)
+                results.append(file_list_R1)
+                results.append(file_list_R2)
+            # FTFF
+            elif not merged and paired and not merge and not pair:
+                for i in range(1, count + 1):
+                    file_1 = name+ "_" + str(i)
+                    file_list = FileList([[file_1, '']])
+                    results.append(file_list)
+            # TFFF
+            elif merged and not paired and not merge and not pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list_R1 = FileList([[file_R1, '']])
+                file_list_R2 = FileList([[file_R2, '']])
+                results.append(file_list_R1)
+                results.append(file_list_R2)
+            # FFTT
+            elif not merged and not paired and merge and pair:
+                files = []
+                for i in range(1, count + 1):
+                    file_R1 = name + "_" + str(i) + "_R1"
+                    file_R2 = name + "_" + str(i) + "_R2"
+                    files.append([file_R1, file_R2])
+                file_list = FileList(files)
+                results.append(file_list)
+            # TFFT
+            elif merged and not paired and not merge and pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list = FileList([[file_R1, file_R2]])
+                results.append(file_list)
+            # FTTF
+            elif not merged and paired and merge and not pair:
+                files = []
+                for i in range(1, count + 1):
+                    file_1 = name+ "_" + str(i)
+                    files.append([file_1, ''])
+                file_list = FileList(files)
+                results.append(file_list)
+            # TTFF
+            elif merged and paired and not merge and not pair:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C2PF
+        elif count > 1 and not paired_status:
+            # FFFF & FFFT & FTFF
+            if not merged and not merge:
+                for i in range(1, count + 1):
+                    file_1 = name+ "_" + str(i)
+                    file_list = FileList([[file_1, '']])
+                    results.append(file_list)
+            # FFTF & FFTT & FTTF
+            elif not merged and merge:
+                files = []
+                for i in range(1, count + 1):
+                    file_1 = name+ "_" + str(i)
+                    files.append([file_1, ''])
+                file_list = FileList(files)
+                results.append(file_list)
+            # TFFF & TFFT & TTFF
+            elif merged and not merge:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C1PT
+        elif count == 1 and paired_status:
+            # FFFF & FFTF & TFFF
+            if not paired and not pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list_R1 = FileList([[file_R1, '']])
+                file_list_R2 = FileList([[file_R2, '']])
+                results.append(file_list_R1)
+                results.append(file_list_R2)
+            # FFFT & FFTT & TFFT
+            elif not paired and pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list = FileList([[file_R1, file_R2]])
+                results.append(file_list)
+            # FTFF & FTTF & TTFF
+            elif paired and not pair:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C1PF
+        elif count == 1 and not paired_status:
+            file_1 = name
+            file_list = FileList([[file_1, '']])
+            results.append(file_list)
+
+        return(results)
+
+    def generate_output(self, name, merged, paired, merge, pair):
+        if name not in self.raw_files:
+            msg = "generate_input: invalid name"
+            sys.stderr.write(msg)
+            sys.exit(1)
+
+        if paired and pair or merged and merge:
+            msg = "generate_output: invalid combination of arguments."
+            sys.stderr.write(msg)
+            sys.exit(1)
+
+        results = []
+        paired_status = self.raw_files[name].get_paired_status()
+        count = self.raw_files[name].get_file_count()
+
+        to_merge = merged or merge
+        to_pair = paired or pair
+
+        # C2PT
+        if count > 1 and paired_status:
+            # FFFF
+            if not to_merge and not to_pair:
+                for i in range(1, count + 1):
+                    file_R1 = name + "_" + str(i) + "_R1"
+                    file_R2 = name + "_" + str(i) + "_R2"
+                    file_list_R1 = FileList([[file_R1, '']])
+                    file_list_R2 = FileList([[file_R2, '']])
+                    results.append(file_list_R1)
+                    results.append(file_list_R2)
+
+            # FFFT & FTFF
+            elif not to_merge and to_pair:
+                files = []
+                for i in range(1, count + 1):
+                    file_1 = name+ "_" + str(i)
+                    file_list = FileList([[file_1, '']])
+                    results.append(file_list)
+
+            # FFTF & TFFF
+            elif to_merge and not to_pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list_R1 = FileList([[file_R1, '']])
+                file_list_R2 = FileList([[file_R2, '']])
+                results.append(file_list_R1)
+                results.append(file_list_R2)
+
+            # FFTT & TFFT & FTTF & TTFF
+            elif to_merge and to_pair:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C2PF
+        if count > 1 and not paired_status:
+            # FFFF & FFFT & FTFF
+            if not to_merge:
+                for i in range(1, count + 1):
+                    file = name + "_" + str(i)
+                    file_list = FileList([[file, '']])
+                    results.append(file_list)
+
+            # FFTF & TFFF & FFTT & TFFT & FTTF & TTFF
+            elif to_merge:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C1PT
+        if count == 1 and paired_status:
+            # FFFF & FFTF & TFFF
+            if not to_pair:
+                file_R1 = name + "_R1"
+                file_R2 = name + "_R2"
+                file_list_R1 = FileList([[file_R1, '']])
+                file_list_R2 = FileList([[file_R2, '']])
+                results.append(file_list_R1)
+                results.append(file_list_R2)
+
+            # FFFT & FTFF & FFTT & TFFT & FTTF & TTFF
+            elif to_pair:
+                file_1 = name
+                file_list = FileList([[file_1, '']])
+                results.append(file_list)
+
+        # C1PF
+        elif count == 1 and not paired_status:
+            file_1 = name
+            file_list = FileList([[file_1, '']])
+            results.append(file_list)
+
+        return(results)
 
     def _get_files(self, idx, name, merge):
         if name is None:
@@ -49,85 +286,20 @@ class OutputManager:
 
         return(to_return)
 
-    def _generate_output(self, name):
-        output = []
-        merge = self.merged
-        pair = self.paired
-
-        file_list = self.raw_files[name]
-
-        if merge == False:
-            for i,file_pair in enumerate(file_list.file_list):
-                output.append([])
-                if pair == False:
-                    file_1 = name + "_" + str(i+1) + "_R1"
-                    file_2 = ""
-                    if len(file_pair[1]) > 0:
-                        file_2 = name + "_" + str(i+1) + "_R2"
-                if pair == True:
-                    file_1 = name + "_" + str(i+1)
-                    file_2 = ""
-                output[i] += [file_1, file_2]
-        if merge == True:
-            if pair == False:
-                file_1 = name + "_R1"
-                file_2 = ""
-                if len(file_list.file_list[0][1]) > 0:
-                    file_2 = name + "_R2"
-            if pair == True:
-                file_1 = name
-                file_2 = ""
-            output.append([file_1, file_2])
-        return(FileList(output, name))
-
-    def _valid(self):
+    def _validate_raw_files(self):
         error = False
         msg = ""
         if not isinstance(self.raw_files, dict):
-            msg += "OutputManager, _valid: raw_files should be a dict.\n"
+            msg += "IOManager, _valid: raw_files should be a dict.\n"
             error = True
         elif len(self.raw_files) < 1:
-            msg += "OutputManager, _valid: raw_files should have at least 1 FileList.\n"
+            msg += "IOManager, _valid: raw_files should have at least 1 FileList.\n"
             error = True
         else:
             for file_list in self.raw_files.values():
                 if not isinstance(file_list, FileList):
-                    msg += "OutputManager, _valid: raw_files entries should be FileList.\n"
+                    msg += "IOManager, _valid: raw_files entries should be FileList.\n"
                     error = True
         if error == True:
             sys.stderr.write(msg)
             sys.exit(1)
-
-    def _validate_outputs_param(self, pair, merge):
-        error = False
-        msg = "OutputManager: generate_outputs invalid params:\n"
-        if not isinstance(pair, bool):
-            msg += "pair is incorrect\n"
-            error = True
-        if not isinstance(merge, bool):
-            msg += "merge is incorrect\n"
-            error = True
-        if error == True:
-            sys.stderr.write(msg)
-            sys.exit(1)
-
-    def _validate_flags(self, pair, merge):
-        error = False
-        msg = ""
-        if self.paired == True and pair == False:
-            msg += "OutputManager: pair param is False but previous call of generate_outputs set it to True.\n"
-            error = True
-        if self.merged == True and merge == False:
-            msg += "OutputManager: merge param is False but previous call of generate_outputs set it to True.\n"
-            error = True
-        if error == True:
-            sys.stderr.write(msg)
-            sys.exit(1)
-
-    def _check_string(self, string):
-        correct = True
-        if not isinstance(string, basestring):
-            correct = False
-        elif len(string) < 1:
-            correct = False
-        return(correct)

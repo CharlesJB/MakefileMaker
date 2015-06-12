@@ -1,5 +1,5 @@
 from nose.tools import *
-from lib.OutputManager import *
+from lib.IOManager import *
 from lib.SampleManager import *
 
 # constructor
@@ -27,6 +27,7 @@ EXP_FASTQ1_TEST2_NO_FASTQ2 = EXP_FASTQ1_TEST2_FULL
 EXP_FASTQ2_TEST1_NO_FASTQ2 = ''
 EXP_FASTQ2_TEST2_NO_FASTQ2 = ''
 
+# TODO: This should be invalid in FileList
 VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL = "raw_data/valid_samplesheet_no_fastq2_partial.txt"
 VALID_RAW_FILES_NO_FASTQ2_PARTIAL = {}
 VALID_RAW_FILES_NO_FASTQ2_PARTIAL[VALID_NAME_1] = SampleManager(VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL).get_file_list(VALID_NAME_1)
@@ -37,23 +38,8 @@ EXP_FASTQ1_TEST2_NO_FASTQ2_PARTIAL = EXP_FASTQ1_TEST2_FULL
 EXP_FASTQ2_TEST1_NO_FASTQ2_PARTIAL = EXP_FASTQ2_TEST1_FULL
 EXP_FASTQ2_TEST2_NO_FASTQ2_PARTIAL = ''
 
-VALID_SAMPLESHEET_IDENTICAL_NAMES = "raw_data/valid_samplesheet_identical_names.txt"
-VALID_RAW_FILES_IDENTICAL_NAMES = {}
-VALID_RAW_FILES_IDENTICAL_NAMES[VALID_NAME_1] = SampleManager(VALID_SAMPLESHEET_IDENTICAL_NAMES).get_file_list(VALID_NAME_1)
-
-# generate_outputs
-VALID_DIR_NAME = "valid_dir_name"
-VALID_SUFFIX = ".valid_suffix"
-VALID_PAIR_TRUE = True
-VALID_PAIR_FALSE = False
-VALID_MERGE_TRUE = True
-VALID_MERGE_FALSE = False
-
-VALID_NAME_1 = "test1"
-VALID_NAME_2 = "test2"
-
 def test_outputmanager_constructor_valid_params_fastq2_full():
-    om = OutputManager(VALID_RAW_FILES_FULL)
+    om = IOManager(VALID_RAW_FILES_FULL)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -67,7 +53,7 @@ def test_outputmanager_constructor_valid_params_fastq2_full():
     eq_(len(om.raw_files[VALID_NAME_2].file_list[0]), 2)
 
 def test_outputmanager_constructor_valid_params_fastq2_no_fastq2():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2)
+    om = IOManager(VALID_RAW_FILES_NO_FASTQ2)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -81,7 +67,7 @@ def test_outputmanager_constructor_valid_params_fastq2_no_fastq2():
     eq_(len(om.raw_files[VALID_NAME_2].file_list[0]), 2)
 
 def test_outputmanager_constructor_valid_params_fastq2_no_fastq2_partial():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
+    om = IOManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -94,239 +80,612 @@ def test_outputmanager_constructor_valid_params_fastq2_no_fastq2_partial():
     eq_(om.raw_files[VALID_NAME_2].file_list[0][1], EXP_FASTQ2_TEST2_NO_FASTQ2_PARTIAL)
     eq_(len(om.raw_files[VALID_NAME_2].file_list[0]), 2)
 
-# Expected: Full samplesheet, pair = False, merge = False
-FILE_1_R1 = VALID_NAME_1 + "_1_R1"
-FILE_2_R1 = VALID_NAME_2 + "_1_R1"
-FILE_1_R2 = VALID_NAME_1 + "_1_R2"
-FILE_2_R2 = VALID_NAME_2 + "_1_R2"
+# Generate IO
+VALID_SAMPLESHEET_IO = "raw_data/valid_samplesheet_IO.txt"
+SAMPLE_MANAGER_IO = SampleManager(VALID_SAMPLESHEET_IO)
+VALID_RAW_FILES_IO = {}
+VALID_RAW_FILES_IO['C2PT'] = SAMPLE_MANAGER_IO.get_file_list('C2PT')
+VALID_RAW_FILES_IO['C2PF'] = SAMPLE_MANAGER_IO.get_file_list('C2PF')
+VALID_RAW_FILES_IO['C1PT'] = SAMPLE_MANAGER_IO.get_file_list('C1PT')
+VALID_RAW_FILES_IO['C1PF'] = SAMPLE_MANAGER_IO.get_file_list('C1PF')
+IO_MANAGER = IOManager(VALID_RAW_FILES_IO)
 
-EXPECTED_FSS_PF_MF = []
-EXPECTED_FSS_PF_MF.append(FileList([[FILE_1_R1, FILE_1_R2]], VALID_NAME_1))
-EXPECTED_FSS_PF_MF.append(FileList([[FILE_2_R1, FILE_2_R2]], VALID_NAME_2))
+## generate_input
+### C2PT
+EXP_INPUT_C2PT_FFFF = [FileList([['C2PT_1_R1', '']]), FileList([['C2PT_1_R2', '']]), FileList([['C2PT_2_R1', '']]), FileList([['C2PT_2_R2', '']])]
+EXP_INPUT_C2PT_FFFT = [FileList([['C2PT_1_R1', 'C2PT_1_R2']]), FileList([['C2PT_2_R1', 'C2PT_2_R2']])]
+EXP_INPUT_C2PT_FFTF = [FileList([['C2PT_1_R1', ''], ['C2PT_2_R1', '']]), FileList([['C2PT_1_R2', ''], ['C2PT_2_R2', '']])]
+EXP_INPUT_C2PT_FTFF = [FileList([['C2PT_1', '']]), FileList([['C2PT_2', '']])]
+EXP_INPUT_C2PT_TFFF = [FileList([['C2PT_R1', '']]), FileList([['C2PT_R2', '']])]
+EXP_INPUT_C2PT_FFTT = [FileList([['C2PT_1_R1', 'C2PT_1_R2'], ['C2PT_2_R1', 'C2PT_2_R2']])]
+EXP_INPUT_C2PT_TFFT = [FileList([['C2PT_R1', 'C2PT_R2']])]
+EXP_INPUT_C2PT_FTTF = [FileList([['C2PT_1', ''],['C2PT_2', '']])]
+EXP_INPUT_C2PT_TTFF = [FileList([['C2PT', '']])]
+### 2 files, not paired: C2PF
+EXP_INPUT_C2PF_FFFF = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_INPUT_C2PF_FFFT = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_INPUT_C2PF_FFTF = [FileList([['C2PF_1', ''], [ 'C2PF_2', '']])]
+EXP_INPUT_C2PF_FTFF = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_INPUT_C2PF_TFFF = [FileList([['C2PF', '']])]
+EXP_INPUT_C2PF_FFTT = [FileList([['C2PF_1', ''], ['C2PF_2', '']])]
+EXP_INPUT_C2PF_TFFT = [FileList([['C2PF', '']])]
+EXP_INPUT_C2PF_FTTF = [FileList([['C2PF_1', ''], [ 'C2PF_2', '']])]
+EXP_INPUT_C2PF_TTFF = [FileList([['C2PF', '']])]
+### 1 file, paired: C1PT
+EXP_INPUT_C1PT_FFFF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_INPUT_C1PT_FFFT = [FileList([['C1PT_R1', 'C1PT_R2']])]
+EXP_INPUT_C1PT_FFTF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_INPUT_C1PT_FTFF = [FileList([['C1PT', '']])]
+EXP_INPUT_C1PT_TFFF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_INPUT_C1PT_FFTT = [FileList([['C1PT_R1', 'C1PT_R2']])]
+EXP_INPUT_C1PT_TFFT = [FileList([['C1PT_R1', 'C1PT_R2']])]
+EXP_INPUT_C1PT_FTTF = [FileList([['C1PT', '']])]
+EXP_INPUT_C1PT_TTFF = [FileList([['C1PT', '']])]
+### 1 file, not paired: C1PF
+EXP_INPUT_C1PF_FFFF = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_FFFT = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_FFTF = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_FTFF = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_TFFF = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_FFTT = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_TFFT = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_FTTF = [FileList([['C1PF', '']])]
+EXP_INPUT_C1PF_TTFF = [FileList([['C1PF', '']])]
 
-def test_outputmanager_generate_outputs_pair_false_merge_false_full_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_FSS_PF_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_FSS_PF_MF[0].name)
-    eq_(outputs[VALID_NAME_2].file_list, EXPECTED_FSS_PF_MF[1].file_list)
-    eq_(outputs[VALID_NAME_2].name, EXPECTED_FSS_PF_MF[1].name)
+### C2PT
+def test_iomanager_generate_input_C2PT_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FFFF[i].file_list)
 
-# Expected: Full samplesheet, pair = True, merge = False
-FILE_1_R1 = VALID_NAME_1 + "_1"
-FILE_1_R2 = ""
-FILE_2_R1 = VALID_NAME_2 + "_1"
-FILE_2_R2 = ""
+def test_iomanager_generate_input_C2PT_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FFFT[i].file_list)
 
-EXPECTED_FSS_PT_MF = []
-EXPECTED_FSS_PT_MF.append(FileList([[FILE_1_R1, FILE_1_R2]], VALID_NAME_1))
-EXPECTED_FSS_PT_MF.append(FileList([[FILE_2_R1, FILE_2_R2]], VALID_NAME_2))
+def test_iomanager_generate_input_C2PT_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, False, True, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FFTF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_false_full_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_FSS_PT_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_FSS_PT_MF[0].name)
-    eq_(outputs[VALID_NAME_2].file_list, EXPECTED_FSS_PT_MF[1].file_list)
-    eq_(outputs[VALID_NAME_2].name, EXPECTED_FSS_PT_MF[1].name)
+def test_iomanager_generate_input_C2PT_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FTFF[i].file_list)
 
-# Expected: Full samplesheet, pair = False, merge = True
-FILE_1_R1 = VALID_NAME_1 + "_R1"
-FILE_2_R1 = VALID_NAME_2 + "_R1"
-FILE_1_R2 = VALID_NAME_1 + "_R2"
-FILE_2_R2 = VALID_NAME_2 + "_R2"
+def test_iomanager_generate_input_C2PT_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', True, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_TFFF[i].file_list)
 
-EXPECTED_FSS_PF_MT = []
-EXPECTED_FSS_PF_MT.append(FileList([[FILE_1_R1, FILE_1_R2]], VALID_NAME_1))
-EXPECTED_FSS_PF_MT.append(FileList([[FILE_2_R1, FILE_2_R2]], VALID_NAME_2))
+def test_iomanager_generate_input_C2PT_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, False, True, True)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FFTT[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_true_full_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_FSS_PF_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_FSS_PF_MT[0].name)
-    eq_(outputs[VALID_NAME_2].file_list, EXPECTED_FSS_PF_MT[1].file_list)
-    eq_(outputs[VALID_NAME_2].name, EXPECTED_FSS_PF_MT[1].name)
+def test_iomanager_generate_input_C2PT_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', True, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C2PT_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_TFFT[i].file_list)
 
-# Expected: Full samplesheet, pair = True, merge = True
-FILE_1 = VALID_NAME_1
-FILE_2 = VALID_NAME_2
+def test_iomanager_generate_input_C2PT_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', False, True, True, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_FTTF[i].file_list)
 
-EXPECTED_FSS_PT_MT = []
-EXPECTED_FSS_PT_MT.append(FileList([[FILE_1, ""]], VALID_NAME_1))
-EXPECTED_FSS_PT_MT.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C2PT_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PT', True, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PT_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PT_TTFF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_true_full_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_FSS_PT_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_FSS_PT_MT[0].name)
-    eq_(outputs[VALID_NAME_2].file_list, EXPECTED_FSS_PT_MT[1].file_list)
-    eq_(outputs[VALID_NAME_2].name, EXPECTED_FSS_PT_MT[1].name)
+### C2PF
+def test_iomanager_generate_input_C2PF_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FFFF[i].file_list)
 
-# Expected: identical names samplesheet, pair = False, merge = False
-FILE_1_R1 = VALID_NAME_1 + "_1_R1"
-FILE_2_R1 = VALID_NAME_1 + "_2_R1"
-FILE_1_R2 = VALID_NAME_1 + "_1_R2"
-FILE_2_R2 = VALID_NAME_1 + "_2_R2"
+def test_iomanager_generate_input_C2PF_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FFFT[i].file_list)
 
-EXPECTED_INSS_PF_MF = []
-EXPECTED_INSS_PF_MF.append(FileList([[FILE_1_R1, FILE_1_R2], [FILE_2_R1, FILE_2_R2]], VALID_NAME_1))
+def test_iomanager_generate_input_C2PF_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, False, True, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FFTF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_false_identical_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_IDENTICAL_NAMES)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_INSS_PF_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_INSS_PF_MF[0].name)
+def test_iomanager_generate_input_C2PF_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FTFF[i].file_list)
 
-# Expected: identical names samplesheet, pair = True, merge = False
-FILE_1 =VALID_NAME_1 + "_1"
-FILE_2 =VALID_NAME_1 + "_2"
+def test_iomanager_generate_input_C2PF_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', True, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_TFFF[i].file_list)
 
-EXPECTED_INSS_PT_MF = []
-EXPECTED_INSS_PT_MF.append(FileList([[FILE_1, ""], [FILE_2, ""]], VALID_NAME_1))
+def test_iomanager_generate_input_C2PF_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, False, True, True)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FFTT[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_false_identical_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_IDENTICAL_NAMES)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_INSS_PT_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_INSS_PT_MF[0].name)
+def test_iomanager_generate_input_C2PF_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', True, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C2PF_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_TFFT[i].file_list)
 
-# Expected: identical names samplesheet, pair = False, merge = True
-FILE_R1 = VALID_NAME_1 + "_R1"
-FILE_R2 = VALID_NAME_1 + "_R2"
+def test_iomanager_generate_input_C2PF_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', False, True, True, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_FTTF[i].file_list)
 
-EXPECTED_INSS_PF_MT = []
-EXPECTED_INSS_PF_MT.append(FileList([[FILE_R1, FILE_R2]], VALID_NAME_1))
+def test_iomanager_generate_input_C2PF_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C2PF', True, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C2PF_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C2PF_TTFF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_true_identical_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_IDENTICAL_NAMES)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_INSS_PF_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_INSS_PF_MT[0].name)
+### C1PT
+def test_iomanager_generate_input_C1PT_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FFFF[i].file_list)
 
-# Expected: identical names samplesheet, pair = True, merge = True
-FILE = VALID_NAME_1
+def test_iomanager_generate_input_C1PT_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FFFT[i].file_list)
 
-EXPECTED_INSS_PT_MT = []
-EXPECTED_INSS_PT_MT.append(FileList([[FILE, ""]], VALID_NAME_1))
+def test_iomanager_generate_input_C1PT_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, False, True, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FFTF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_true_identical_samplesheet():
-    om = OutputManager(VALID_RAW_FILES_IDENTICAL_NAMES)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_INSS_PT_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_INSS_PT_MT[0].name)
+def test_iomanager_generate_input_C1PT_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FTFF[i].file_list)
 
-# Expected: samplesheet no fastq2, pair = False, merge = False
-FILE_1 = VALID_NAME_1 + "_1_R1"
-FILE_2 = VALID_NAME_2 + "_1_R1"
+def test_iomanager_generate_input_C1PT_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', True, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_TFFF[i].file_list)
 
-EXPECTED_SSNF2_PF_MF = []
-EXPECTED_SSNF2_PF_MF.append(FileList([[FILE_1, ""]], VALID_NAME_1))
-EXPECTED_SSNF2_PF_MF.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C1PT_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, False, True, True)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FFTT[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_false_samplesheet_no_fastq2():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2_PF_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2_PF_MF[0].name)
+def test_iomanager_generate_input_C1PT_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', True, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C1PT_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_TFFT[i].file_list)
 
-# Expected: samplesheet no fastq2, pair = True, merge = False
-FILE_1 = VALID_NAME_1 + "_1"
-FILE_2 = VALID_NAME_2 + "_1"
+def test_iomanager_generate_input_C1PT_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', False, True, True, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_FTTF[i].file_list)
 
-EXPECTED_SSNF2_PT_MF = []
-EXPECTED_SSNF2_PT_MF.append(FileList([[FILE_1, ""]], VALID_NAME_1))
-EXPECTED_SSNF2_PT_MF.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C1PT_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PT', True, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PT_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PT_TTFF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_false_samplesheet_no_fastq2():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2_PT_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2_PT_MF[0].name)
+### C1PF
+def test_iomanager_generate_input_C1PF_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FFFF[i].file_list)
 
-# Expected: samplesheet no fastq2, pair = False, merge = True
-FILE_1 = VALID_NAME_1 + "_R1"
-FILE_2 = VALID_NAME_2 + "_R1"
+def test_iomanager_generate_input_C1PF_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FFFT[i].file_list)
 
-EXPECTED_SSNF2_PF_MT = []
-EXPECTED_SSNF2_PF_MT.append(FileList([[FILE_1, ""]], VALID_NAME_1))
-EXPECTED_SSNF2_PF_MT.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C1PF_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, False, True, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FFTF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_true_samplesheet_no_fastq2():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2_PF_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2_PF_MT[0].name)
+def test_iomanager_generate_input_C1PF_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FTFF[i].file_list)
 
-# Expected: samplesheet no fastq2, pair = True, merge = True
-FILE_1 = VALID_NAME_1
-FILE_2 = VALID_NAME_2
+def test_iomanager_generate_input_C1PF_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', True, False, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_TFFF[i].file_list)
 
-EXPECTED_SSNF2_PT_MT = []
-EXPECTED_SSNF2_PT_MT.append(FileList([[FILE_1, ""]], VALID_NAME_1))
-EXPECTED_SSNF2_PT_MT.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C1PF_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, False, True, True)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FFTT[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_true_merge_true_samplesheet_no_fastq2():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2_PT_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2_PT_MT[0].name)
+def test_iomanager_generate_input_C1PF_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', True, False, False, True)
+    eq_(len(obs), len(EXP_INPUT_C1PF_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_TFFT[i].file_list)
 
-# Expected: samplesheet no fastq2 partial, pair = True, merge = False
-FILE_1_R1 = VALID_NAME_1 + "_1_R1"
-FILE_1_R2 = VALID_NAME_1 + "_1_R2"
-FILE_2 =VALID_NAME_2 + "_1_R1"
+def test_iomanager_generate_input_C1PF_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', False, True, True, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_FTTF[i].file_list)
 
-EXPECTED_SSNF2P_PF_MF = []
-EXPECTED_SSNF2P_PF_MF.append(FileList([[FILE_1_R1, FILE_1_R2]], VALID_NAME_1))
-EXPECTED_SSNF2P_PF_MF.append(FileList([[FILE_2, ""]], VALID_NAME_2))
+def test_iomanager_generate_input_C1PF_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_input('C1PF', True, True, False, False)
+    eq_(len(obs), len(EXP_INPUT_C1PF_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_INPUT_C1PF_TTFF[i].file_list)
 
-def test_outputmanager_generate_outputs_pair_false_merge_false_samplesheet_no_fastq2_partial():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2P_PF_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2P_PF_MF[0].name)
-
-# Expected: samplesheet no fastq2 partial, pair = True, merge = False
-EXPECTED_SSNF2P_PT_MF = EXPECTED_SSNF2_PT_MF
-
-def test_outputmanager_generate_outputs_pair_true_merge_false_samplesheet_no_fastq2_partial():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_FALSE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2P_PT_MF[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2P_PT_MF[0].name)
-
-# Expected: samplesheet no fastq2 partial, pair = False, merge = True
-FILE_1_R1 = VALID_NAME_1 + "_R1"
-FILE_1_R2 = VALID_NAME_1 + "_R2"
-FILE_2 =VALID_NAME_2 + "_R1"
-
-EXPECTED_SSNF2P_PF_MT = []
-EXPECTED_SSNF2P_PF_MT.append(FileList([[FILE_1_R1, FILE_1_R2]], VALID_NAME_1))
-EXPECTED_SSNF2P_PF_MT.append(FileList([[FILE_2, ""]], VALID_NAME_2))
-
-def test_outputmanager_generate_outputs_pair_false_merge_true_samplesheet_no_fastq2_partial():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
-    outputs = om.generate_outputs(VALID_PAIR_FALSE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2P_PF_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2P_PF_MT[0].name)
-
-# Expected: samplesheet no fastq2 partial, pair = True, merge = True
-EXPECTED_SSNF2P_PT_MT = EXPECTED_SSNF2_PT_MT
-
-def test_outputmanager_generate_outputs_pair_true_merge_true_samplesheet_no_fastq2_partial():
-    om = OutputManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
-    outputs = om.generate_outputs(VALID_PAIR_TRUE, VALID_MERGE_TRUE)
-    eq_(outputs[VALID_NAME_1].file_list, EXPECTED_SSNF2P_PT_MT[0].file_list)
-    eq_(outputs[VALID_NAME_1].name, EXPECTED_SSNF2P_PT_MT[0].name)
+### Invalid name
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_name():
+    IO_MANAGER.generate_input('FFFF', False, False, False, False)
 
 @raises(SystemExit)
-def test_outputmanager_generate_outputs_invalid_pair_type():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    om.generate_outputs('a', VALID_MERGE_TRUE)
+def test_iomanager_generate_input_invalid_name_empty():
+    IO_MANAGER.generate_input('', False, False, False, False)
+
+### Invalid cases: FTFT & TFTF & FTTT & TFTT & TTFT & TTTF & TTTT
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_FTFT():
+    IO_MANAGER.generate_input('C2PT', False, True, False, True)
 
 @raises(SystemExit)
-def test_outputmanager_generate_outputs_invalid_merge_type():
-    om = OutputManager(VALID_RAW_FILES_FULL)
-    om.generate_outputs(VALID_PAIR_TRUE, 'a')
+def test_iomanager_generate_input_invalid_case_TFTF():
+    IO_MANAGER.generate_input('C2PT', True, False, True, False)
+
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_FTTT():
+    IO_MANAGER.generate_input('C2PT', False, True, True, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_TFTT():
+    IO_MANAGER.generate_input('C2PT', True, False, True, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_TTFT():
+    IO_MANAGER.generate_input('C2PT', True, True, False, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_TTTF():
+    IO_MANAGER.generate_input('C2PT', True, True, True, False)
+
+@raises(SystemExit)
+def test_iomanager_generate_input_invalid_case_TTTT():
+    IO_MANAGER.generate_input('C2PT', True, True, True, True)
+
+## generate_output
+### C2PT
+EXP_OUTPUT_C2PT_FFFF = [FileList([['C2PT_1_R1', '']]), FileList([['C2PT_1_R2', '']]), FileList([['C2PT_2_R1', '']]), FileList([['C2PT_2_R2', '']])]
+EXP_OUTPUT_C2PT_FFFT = [FileList([['C2PT_1', '']]), FileList([['C2PT_2', '']])]
+EXP_OUTPUT_C2PT_FFTF = [FileList([['C2PT_R1', '']]), FileList([['C2PT_R2', '']])]
+EXP_OUTPUT_C2PT_FTFF = [FileList([['C2PT_1', '']]), FileList([['C2PT_2', '']])]
+EXP_OUTPUT_C2PT_TFFF = [FileList([['C2PT_R1', '']]), FileList([['C2PT_R2', '']])]
+EXP_OUTPUT_C2PT_FFTT = [FileList([['C2PT', '']])]
+EXP_OUTPUT_C2PT_TFFT = [FileList([['C2PT', '']])]
+EXP_OUTPUT_C2PT_FTTF = [FileList([['C2PT', '']])]
+EXP_OUTPUT_C2PT_TTFF = [FileList([['C2PT', '']])]
+### 2 files, not paired: C2PF
+EXP_OUTPUT_C2PF_FFFF = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_OUTPUT_C2PF_FFFT = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_OUTPUT_C2PF_FFTF = [FileList([['C2PF', '']])]
+EXP_OUTPUT_C2PF_FTFF = [FileList([['C2PF_1', '']]), FileList([['C2PF_2', '']])]
+EXP_OUTPUT_C2PF_TFFF = [FileList([['C2PF', '']])]
+EXP_OUTPUT_C2PF_FFTT = [FileList([['C2PF', '']])]
+EXP_OUTPUT_C2PF_TFFT = [FileList([['C2PF', '']])]
+EXP_OUTPUT_C2PF_FTTF = [FileList([['C2PF', '']])]
+EXP_OUTPUT_C2PF_TTFF = [FileList([['C2PF', '']])]
+### 1 file, paired: C1PT
+EXP_OUTPUT_C1PT_FFFF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_OUTPUT_C1PT_FFFT = [FileList([['C1PT', '']])]
+EXP_OUTPUT_C1PT_FFTF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_OUTPUT_C1PT_FTFF = [FileList([['C1PT', '']])]
+EXP_OUTPUT_C1PT_TFFF = [FileList([['C1PT_R1', '']]), FileList([['C1PT_R2', '']])]
+EXP_OUTPUT_C1PT_FFTT = [FileList([['C1PT', '']])]
+EXP_OUTPUT_C1PT_TFFT = [FileList([['C1PT', '']])]
+EXP_OUTPUT_C1PT_FTTF = [FileList([['C1PT', '']])]
+EXP_OUTPUT_C1PT_TTFF = [FileList([['C1PT', '']])]
+### 1 file, not paired: C1PF
+EXP_OUTPUT_C1PF_FFFF = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_FFFT = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_FFTF = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_FTFF = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_TFFF = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_FFTT = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_TFFT = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_FTTF = [FileList([['C1PF', '']])]
+EXP_OUTPUT_C1PF_TTFF = [FileList([['C1PF', '']])]
+
+### C2PT
+def test_iomanager_generate_output_C2PT_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FFFF[i].file_list)
+
+def test_iomanager_generate_output_C2PT_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FFFT[i].file_list)
+
+def test_iomanager_generate_output_C2PT_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, False, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FFTF[i].file_list)
+
+def test_iomanager_generate_output_C2PT_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FTFF[i].file_list)
+
+def test_iomanager_generate_output_C2PT_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', True, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_TFFF[i].file_list)
+
+def test_iomanager_generate_output_C2PT_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, False, True, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FFTT[i].file_list)
+
+def test_iomanager_generate_output_C2PT_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', True, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_TFFT[i].file_list)
+
+def test_iomanager_generate_output_C2PT_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', False, True, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_FTTF[i].file_list)
+
+def test_iomanager_generate_output_C2PT_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PT', True, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PT_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PT_TTFF[i].file_list)
+
+### C2PF
+def test_iomanager_generate_output_C2PF_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FFFF[i].file_list)
+
+def test_iomanager_generate_output_C2PF_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FFFT[i].file_list)
+
+def test_iomanager_generate_output_C2PF_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, False, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FFTF[i].file_list)
+
+def test_iomanager_generate_output_C2PF_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FTFF[i].file_list)
+
+def test_iomanager_generate_output_C2PF_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', True, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_TFFF[i].file_list)
+
+def test_iomanager_generate_output_C2PF_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, False, True, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FFTT[i].file_list)
+
+def test_iomanager_generate_output_C2PF_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', True, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_TFFT[i].file_list)
+
+def test_iomanager_generate_output_C2PF_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', False, True, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_FTTF[i].file_list)
+
+def test_iomanager_generate_output_C2PF_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C2PF', True, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C2PF_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C2PF_TTFF[i].file_list)
+
+### C1PT
+def test_iomanager_generate_output_C1PT_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FFFF[i].file_list)
+
+def test_iomanager_generate_output_C1PT_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FFFT[i].file_list)
+
+def test_iomanager_generate_output_C1PT_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, False, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FFTF[i].file_list)
+
+def test_iomanager_generate_output_C1PT_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FTFF[i].file_list)
+
+def test_iomanager_generate_output_C1PT_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', True, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_TFFF[i].file_list)
+
+def test_iomanager_generate_output_C1PT_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, False, True, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FFTT[i].file_list)
+
+def test_iomanager_generate_output_C1PT_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', True, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_TFFT[i].file_list)
+
+def test_iomanager_generate_output_C1PT_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', False, True, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_FTTF[i].file_list)
+
+def test_iomanager_generate_output_C1PT_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PT', True, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PT_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PT_TTFF[i].file_list)
+
+### C1PF
+def test_iomanager_generate_output_C1PF_FFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FFFF[i].file_list)
+
+def test_iomanager_generate_output_C1PF_FFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FFFT[i].file_list)
+
+def test_iomanager_generate_output_C1PF_FFTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, False, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FFTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FFTF[i].file_list)
+
+def test_iomanager_generate_output_C1PF_FTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FTFF[i].file_list)
+
+def test_iomanager_generate_output_C1PF_TFFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', True, False, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_TFFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_TFFF[i].file_list)
+
+def test_iomanager_generate_output_C1PF_FFTT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, False, True, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FFTT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FFTT[i].file_list)
+
+def test_iomanager_generate_output_C1PF_TFFT_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', True, False, False, True)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_TFFT))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_TFFT[i].file_list)
+
+def test_iomanager_generate_output_C1PF_FTTF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', False, True, True, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_FTTF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_FTTF[i].file_list)
+
+def test_iomanager_generate_output_C1PF_TTFF_full_sample_sheet():
+    obs = IO_MANAGER.generate_output('C1PF', True, True, False, False)
+    eq_(len(obs), len(EXP_OUTPUT_C1PF_TTFF))
+    for i in range(0, len(obs)):
+        eq_(obs[i].file_list, EXP_OUTPUT_C1PF_TTFF[i].file_list)
+
+### Invalid name
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_name():
+    IO_MANAGER.generate_output('FFFF', False, False, False, False)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_name_empty():
+    IO_MANAGER.generate_output('', False, False, False, False)
+
+### Invalid cases: FTFT & TFTF & FTTT & TFTT & TTFT & TTTF & TTTT
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_FTFT():
+    IO_MANAGER.generate_output('C2PT', False, True, False, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_TFTF():
+    IO_MANAGER.generate_output('C2PT', True, False, True, False)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_FTTT():
+    IO_MANAGER.generate_output('C2PT', False, True, True, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_TFTT():
+    IO_MANAGER.generate_output('C2PT', True, False, True, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_TTFT():
+    IO_MANAGER.generate_output('C2PT', True, True, False, True)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_TTTF():
+    IO_MANAGER.generate_output('C2PT', True, True, True, False)
+
+@raises(SystemExit)
+def test_iomanager_generate_output_invalid_case_TTTT():
+    IO_MANAGER.generate_output('C2PT', True, True, True, True)
