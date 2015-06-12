@@ -56,7 +56,7 @@ class SampleManager:
             file_list = []
             for i, _ in enumerate(fastq1):
                 file_list.append([fastq1[i], fastq2[i]])
-            return(FileList(file_list, name))
+            return(FileList(file_list))
 
     def _check_string(self, string):
         correct = True
@@ -106,7 +106,9 @@ class SampleManager:
         tokens[-1] = tokens[-1].strip()
         name = tokens[self.idx['name']]
         fastq1 = tokens[self.idx['fastq1']]
-        fastq2 = tokens[self.idx['fastq2']]
+        fastq2 = ''
+        if len(tokens) > self.idx['fastq2']:
+            fastq2 = tokens[self.idx['fastq2']]
 
         # Add file paths
         if name not in self.raw_files_r1:
