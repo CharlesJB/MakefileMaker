@@ -7,10 +7,18 @@ import sys
 import os
 
 class FileList:
-    def __init__(self, file_list, name):
+    def __init__(self, file_list):
         self.file_list = file_list
-        self.name = name
         self._valid()
+
+    def get_file_count(self):
+        return(len(self.file_list))
+
+    def get_paired_status(self):
+        if len(self.file_list[0][1]) == 0:
+            return(False)
+        else:
+            return(True)
 
     def get_files(self, i):
         try:
@@ -24,9 +32,6 @@ class FileList:
             to_return.append(files[0])
             return(to_return)
         return(files)
-
-    def get_name(self):
-        return(self.name)
 
     def unlist(self):
         files = []
@@ -53,12 +58,6 @@ class FileList:
     def _valid(self):
         correct = True
         msg = ""
-        if not isinstance(self.name, basestring):
-            msg += "FileList: name param should be a string.\n"
-            correct = False
-        elif len(self.name) < 1:
-            msg += "FileList: name param should be at least 1 character long.\n"
-            correct = False
         if not isinstance(self.file_list, list):
             msg += "FileList: file_list param should be a list.\n"
             correct = False
@@ -74,7 +73,6 @@ class FileList:
         if correct == False:
             sys.stderr.write(msg)
             sys.exit(1)
-        
 
     def _validate_key(self, key):
         correct = True
@@ -89,4 +87,3 @@ class FileList:
             if len(key[0]) < 1:
                 correct = False
         return(correct)
-
