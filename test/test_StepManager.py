@@ -177,7 +177,9 @@ def test_step_manager_get_makefile_step_1():
     exp += 'STEP1_TARGETS+=Step1/test2_R2.txt\n'
     exp += '\n'
     exp += '# Phony targets\n'
-    exp += '.PHONY: Step1\n'
+    exp += '.PHONY: Step1_dir Step1\n'
+    exp += 'Step1_dir: $(STEP1_DIR_NAME)\n'
+    exp += '\n'
     exp += 'Step1: $(STEP1_TARGETS)\n'
     exp += '\n'
     exp += '# Recipes\n'
@@ -193,6 +195,8 @@ def test_step_manager_get_makefile_step_1():
     exp += 'Step1/test2_R2.txt:\n'
     exp += '\ttouch $@\n'
     exp += '\n'
+    exp += 'Step1:\n'
+    exp += '\tmkdir $@'
     eq_(sm.produce_makefile("Step1"), exp)
 
 def test_step_manager_get_makefile_step_2():
@@ -207,7 +211,9 @@ def test_step_manager_get_makefile_step_2():
     exp += 'STEP2_TARGETS+=Step2/test2.csv\n'
     exp += '\n'
     exp += '# Phony targets\n'
-    exp += '.PHONY: Step2\n'
+    exp += '.PHONY: Step2_dir Step2\n'
+    exp += 'Step2_dir: $(STEP2_DIR_NAME)\n'
+    exp += '\n'
     exp += 'Step2: $(STEP2_TARGETS)\n'
     exp += '\n'
     exp += '# Recipes\n'
@@ -217,4 +223,6 @@ def test_step_manager_get_makefile_step_2():
     exp += 'Step2/test2.csv: Step1/test2_R1.txt Step1/test2_R2.txt\n'
     exp += '\ttouch $@\n'
     exp += '\n'
+    exp += 'Step2:\n'
+    exp += '\tmkdir $@'
     eq_(sm.produce_makefile("Step2"), exp)

@@ -69,7 +69,9 @@ class StepManager:
 
         # 3. Phony targets
         makefile += "# Phony targets\n"
-        makefile += ".PHONY: " + step_name + "\n"
+        makefile += ".PHONY: " + step_name + "_dir " + step_name + "\n"
+        makefile += step_name + "_dir: $(" + step_name.upper() + "_DIR_NAME)\n"
+        makefile += "\n"
         makefile += step_name + ": $(" + step_name.upper() + "_TARGETS)" + "\n"
         makefile += "\n"
  
@@ -81,6 +83,8 @@ class StepManager:
             else:
                 makefile += current_step.produce_recipe(None, outputs[i], None, None) + "\n"
             makefile += "\n"
+        makefile += dir_name + ":\n"
+        makefile += "\tmkdir $@"
 
         return(makefile)
 
