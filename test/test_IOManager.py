@@ -8,9 +8,6 @@ VALID_NAME_1 = "test1"
 VALID_NAME_2 = "test2"
 
 VALID_SAMPLESHEET_FULL = "raw_data/valid_samplesheet.txt"
-VALID_RAW_FILES_FULL = {}
-VALID_RAW_FILES_FULL[VALID_NAME_1] = SampleManager(VALID_SAMPLESHEET_FULL).get_file_list(VALID_NAME_1)
-VALID_RAW_FILES_FULL[VALID_NAME_2] = SampleManager(VALID_SAMPLESHEET_FULL).get_file_list(VALID_NAME_2)
 
 EXP_FASTQ1_TEST1_FULL = 'raw_data/a1_1.fastq.gz'
 EXP_FASTQ1_TEST2_FULL = 'raw_data/a2_1.fastq.gz'
@@ -18,9 +15,6 @@ EXP_FASTQ2_TEST1_FULL = 'raw_data/a1_2.fastq.gz'
 EXP_FASTQ2_TEST2_FULL = 'raw_data/a2_2.fastq.gz'
 
 VALID_SAMPLESHEET_NO_FASTQ2 = "raw_data/valid_samplesheet_no_fastq2.txt"
-VALID_RAW_FILES_NO_FASTQ2 = {}
-VALID_RAW_FILES_NO_FASTQ2[VALID_NAME_1] = SampleManager(VALID_SAMPLESHEET_NO_FASTQ2).get_file_list(VALID_NAME_1)
-VALID_RAW_FILES_NO_FASTQ2[VALID_NAME_2] = SampleManager(VALID_SAMPLESHEET_NO_FASTQ2).get_file_list(VALID_NAME_2)
 
 EXP_FASTQ1_TEST1_NO_FASTQ2 = EXP_FASTQ1_TEST1_FULL
 EXP_FASTQ1_TEST2_NO_FASTQ2 = EXP_FASTQ1_TEST2_FULL
@@ -29,9 +23,6 @@ EXP_FASTQ2_TEST2_NO_FASTQ2 = ''
 
 # TODO: This should be invalid in FileList
 VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL = "raw_data/valid_samplesheet_no_fastq2_partial.txt"
-VALID_RAW_FILES_NO_FASTQ2_PARTIAL = {}
-VALID_RAW_FILES_NO_FASTQ2_PARTIAL[VALID_NAME_1] = SampleManager(VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL).get_file_list(VALID_NAME_1)
-VALID_RAW_FILES_NO_FASTQ2_PARTIAL[VALID_NAME_2] = SampleManager(VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL).get_file_list(VALID_NAME_2)
 
 EXP_FASTQ1_TEST1_NO_FASTQ2_PARTIAL = EXP_FASTQ1_TEST1_FULL
 EXP_FASTQ1_TEST2_NO_FASTQ2_PARTIAL = EXP_FASTQ1_TEST2_FULL
@@ -39,7 +30,7 @@ EXP_FASTQ2_TEST1_NO_FASTQ2_PARTIAL = EXP_FASTQ2_TEST1_FULL
 EXP_FASTQ2_TEST2_NO_FASTQ2_PARTIAL = ''
 
 def test_outputmanager_constructor_valid_params_fastq2_full():
-    om = IOManager(VALID_RAW_FILES_FULL)
+    om = IOManager(VALID_SAMPLESHEET_FULL)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -53,7 +44,7 @@ def test_outputmanager_constructor_valid_params_fastq2_full():
     eq_(len(om.raw_files[VALID_NAME_2].file_list[0]), 2)
 
 def test_outputmanager_constructor_valid_params_fastq2_no_fastq2():
-    om = IOManager(VALID_RAW_FILES_NO_FASTQ2)
+    om = IOManager(VALID_SAMPLESHEET_NO_FASTQ2)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -67,7 +58,7 @@ def test_outputmanager_constructor_valid_params_fastq2_no_fastq2():
     eq_(len(om.raw_files[VALID_NAME_2].file_list[0]), 2)
 
 def test_outputmanager_constructor_valid_params_fastq2_no_fastq2_partial():
-    om = IOManager(VALID_RAW_FILES_NO_FASTQ2_PARTIAL)
+    om = IOManager(VALID_SAMPLESHEET_NO_FASTQ2_PARTIAL)
     eq_(isinstance(om.raw_files, dict), True)
     eq_(len(om.raw_files), 2)
     eq_(om.raw_files.keys(), [VALID_NAME_1,VALID_NAME_2])
@@ -83,12 +74,12 @@ def test_outputmanager_constructor_valid_params_fastq2_no_fastq2_partial():
 # Generate IO
 VALID_SAMPLESHEET_IO = "raw_data/valid_samplesheet_IO.txt"
 SAMPLE_MANAGER_IO = SampleManager(VALID_SAMPLESHEET_IO)
-VALID_RAW_FILES_IO = {}
-VALID_RAW_FILES_IO['C2PT'] = SAMPLE_MANAGER_IO.get_file_list('C2PT')
-VALID_RAW_FILES_IO['C2PF'] = SAMPLE_MANAGER_IO.get_file_list('C2PF')
-VALID_RAW_FILES_IO['C1PT'] = SAMPLE_MANAGER_IO.get_file_list('C1PT')
-VALID_RAW_FILES_IO['C1PF'] = SAMPLE_MANAGER_IO.get_file_list('C1PF')
-IO_MANAGER = IOManager(VALID_RAW_FILES_IO)
+#VALID_RAW_FILES_IO = {}
+#VALID_RAW_FILES_IO['C2PT'] = SAMPLE_MANAGER_IO.get_file_list('C2PT')
+#VALID_RAW_FILES_IO['C2PF'] = SAMPLE_MANAGER_IO.get_file_list('C2PF')
+#VALID_RAW_FILES_IO['C1PT'] = SAMPLE_MANAGER_IO.get_file_list('C1PT')
+#VALID_RAW_FILES_IO['C1PF'] = SAMPLE_MANAGER_IO.get_file_list('C1PF')
+IO_MANAGER = IOManager(VALID_SAMPLESHEET_IO)
 
 ## generate_input
 ### C2PT

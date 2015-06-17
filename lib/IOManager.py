@@ -6,7 +6,8 @@
 import sys
 import os
 
-from lib.FileList import *
+#from lib.FileList import *
+from lib.SampleManager import *
 
 # 4 letter code to represent the IO status of current step:
 # merged: sample was merged on a previous step
@@ -33,8 +34,9 @@ from lib.FileList import *
 ## C1PF: 1 file, not paired
 
 class IOManager:
-    def __init__(self, raw_files):
-        self.raw_files = raw_files
+    def __init__(self, sample_sheet):
+        self.sample_manager = SampleManager(sample_sheet)
+        self.raw_files = self.sample_manager.get_raw_files()
         self._validate_raw_files()
 
     def generate_inputs(self, merged, paired, merge, pair):

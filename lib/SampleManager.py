@@ -61,6 +61,12 @@ class SampleManager:
     def get_names(self):
         return(self.raw_files_r1.keys())
 
+    def get_raw_files(self):
+        raw_file_list = {}
+        for name in self.get_names():
+            raw_file_list[name] = self.get_file_list(name)
+        return(raw_file_list)
+
     def _check_string(self, string):
         correct = True
         if not isinstance(string, basestring):

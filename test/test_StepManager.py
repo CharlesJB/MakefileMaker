@@ -4,11 +4,7 @@ from lib.SampleManager import *
 
 # Valid IOManager
 VALID_SAMPLESHEET = "raw_data/valid_samplesheet.txt"
-SAMPLE_MANAGER = SampleManager(VALID_SAMPLESHEET)
-VALID_RAW_FILES = {}
-VALID_RAW_FILES['test1'] = SAMPLE_MANAGER.get_file_list('test1')
-VALID_RAW_FILES['test2'] = SAMPLE_MANAGER.get_file_list('test2')
-IO_MANAGER = IOManager(VALID_RAW_FILES)
+IO_MANAGER = IOManager(VALID_SAMPLESHEET)
 
 # Valid Steps
 VALID_CONFIG_FILE = "raw_data/valid_dummy_1.ini"
