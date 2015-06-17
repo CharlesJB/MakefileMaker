@@ -58,6 +58,9 @@ class SampleManager:
                 file_list.append([fastq1[i], fastq2[i]])
             return(FileList(file_list))
 
+    def get_names(self):
+        return(self.raw_files_r1.keys())
+
     def _check_string(self, string):
         correct = True
         if not isinstance(string, basestring):
