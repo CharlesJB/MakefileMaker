@@ -21,13 +21,13 @@ class Step:
         self.pair_status = False
         self.keep_pair_together_status = False
         self._set_step_specific_values()
-
-        # Prepare config file
         self.config_files = config_files
-        self._parse_config()
 
         # Check if object is still valid
         self._valid()
+
+        # Prepare config file
+        self._parse_config()
 
     def get_name(self):
         return(self.name)
