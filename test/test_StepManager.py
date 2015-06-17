@@ -18,14 +18,13 @@ class TestStep1(Step):
         return("ABC=DEF")
     def _set_step_specific_values(self):
         self.name = "Step1"
-        self.dir_name = "Step1"
-        self.suffix = ".txt"
         self.merge_status = True
         self.pair_status = False
     def _get_command(self, dependencies, outputs):
         return("\ttouch $@")
     def _set_default_params(self):
-        pass
+        self.params['dir_name'] = "Step1"
+        self.params['suffix'] = ".txt"
     def _validate_param_step_specific(self, inputs, outputs):
         pass
 
@@ -34,14 +33,13 @@ step1 = TestStep1([VALID_CONFIG_FILE])
 class TestStep2(Step):
     def _set_step_specific_values(self):
         self.name = "Step2"
-        self.dir_name = "Step2"
-        self.suffix = ".csv"
         self.merge_status = False
         self.pair_status = True
     def _get_command(self, dependencies, outputs):
         return("\ttouch $@")
     def _set_default_params(self):
-        pass
+        self.params['dir_name'] = "Step2"
+        self.params['suffix'] = ".csv"
     def _validate_param_step_specific(self, inputs, outputs):
         pass
 
@@ -54,13 +52,12 @@ class TestStep3(Step):
         return("")
     def _set_step_specific_values(self):
         self.name = "Step3"
-        self.dir_name = "Step3"
         self.merge_status = False
         self.pair_status = False
     def _get_command(self, dependencies, outputs):
         return("\ttouch $@")
     def _set_default_params(self):
-        pass
+        self.params['dir_name'] = "Step3"
     def _validate_param_step_specific(self, inputs, outputs):
         pass
 
@@ -71,13 +68,12 @@ class TestStep4(Step):
         return("")
     def _set_step_specific_values(self):
         self.name = "Step4"
-        self.dir_name = "Step4"
         self.merge_status = True
         self.pair_status = False
     def _get_command(self, dependencies, outputs):
         return("touch $@")
     def _set_default_params(self):
-        pass
+        self.params['dir_name'] = "Step4"
     def _validate_param_step_specific(self, inputs, outputs):
         pass
 
@@ -88,13 +84,12 @@ class TestStep5(Step):
         return("")
     def _set_step_specific_values(self):
         self.name = "Step5"
-        self.dir_name = "Step5"
         self.merge_status = False
         self.pair_status = True
     def _get_command(self, dependencies, outputs):
         return("touch $@")
     def _set_default_params(self):
-        pass
+        self.params['dir_name'] = "Step5"
     def _validate_param_step_specific(self, inputs, outputs):
         pass
 

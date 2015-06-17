@@ -16,7 +16,6 @@ class Step:
 
         # Step specific values, to set in _set_step_specific_values
         self.name = ""
-        self.dir_name = ""
         self.merge_status = False
         self.pair_status = False
         self.keep_pair_together_status = False
@@ -31,9 +30,6 @@ class Step:
 
     def get_name(self):
         return(self.name)
-
-    def get_dir_name(self):
-        return(self.dir_name)
 
     def get_merge_status(self):
         return(self.merge_status)
@@ -52,7 +48,7 @@ class Step:
     def produce_recipe(self, inputs, outputs, input_dir_name = None, input_suffix = None):
         self._validate_params(inputs, outputs)
         # Target
-        target = " ".join(outputs.unlist(self.dir_name, self.suffix))
+        target = " ".join(outputs.unlist(self.params['dir_name'], self.params['suffix']))
         dependencies = inputs
         if inputs is not None:
             dependencies  = " ".join(inputs.unlist(input_dir_name, input_suffix))
@@ -129,8 +125,6 @@ class DummyStep(Step):
     # To implement in each Step
     def _set_step_specific_values(self):
         self.name = "DummyStep"
-        self.dir_name = "Dummy"
-        self.suffix = ".txt"
         self.merge_status = True
         self.pair_status = True
         self.keep_pair_together_status = False
@@ -145,6 +139,8 @@ class DummyStep(Step):
     def _set_default_params(self):
         self.params['dummy_param_1'] = 'dummy_param_default_1'
         self.params['dummy_param_2'] = 'dummy_param_default_2'
+        self.params['dir_name'] = 'Dummy'
+        self.params['suffix'] = '.txt'
 
     # To implement in each Step, if necessary
     def _validate_param_step_specific(self, inputs, outputs):

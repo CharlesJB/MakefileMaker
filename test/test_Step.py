@@ -18,7 +18,7 @@ def test_dummy_step_constructor():
     ds = DummyStep([VALID_CONFIG_FILE_1])
     eq_(ds.name, "DummyStep")
     eq_(isinstance(ds.params, dict), True)
-    eq_(len(ds.params), 2)
+    eq_(len(ds.params), 4)
     eq_(ds.params['dummy_param_1'], 'dummy_param_1_1')
     eq_(ds.params['dummy_param_2'], 'dummy_param_1_2')
     eq_(ds.config_files, [VALID_CONFIG_FILE_1])
@@ -27,7 +27,7 @@ def test_dummy_step_constructor_2_config_files():
     ds = DummyStep([VALID_CONFIG_FILE_1, VALID_CONFIG_FILE_2])
     eq_(ds.name, "DummyStep")
     eq_(isinstance(ds.params, dict), True)
-    eq_(len(ds.params), 2)
+    eq_(len(ds.params), 4)
     eq_(ds.params['dummy_param_1'], 'dummy_param_2_1')
     eq_(ds.params['dummy_param_2'], 'dummy_param_2_2')
     eq_(ds.config_files, [VALID_CONFIG_FILE_1, VALID_CONFIG_FILE_2])
@@ -36,7 +36,7 @@ def test_dummy_step_constructor_no_config_files():
     ds = DummyStep([])
     eq_(ds.name, "DummyStep")
     eq_(isinstance(ds.params, dict), True)
-    eq_(len(ds.params), 2)
+    eq_(len(ds.params), 4)
     eq_(ds.params['dummy_param_1'], 'dummy_param_default_1')
     eq_(ds.params['dummy_param_2'], 'dummy_param_default_2')
     eq_(ds.config_files, [])
@@ -51,7 +51,7 @@ def test_dummy_step_get_name():
 
 def test_dummy_step_get_dir_name():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_dir_name(), "Dummy")
+    eq_(ds.params['dir_name'], "Dummy")
 
 def test_dummy_step_get_pair_status():
     ds = DummyStep([VALID_CONFIG_FILE_1])

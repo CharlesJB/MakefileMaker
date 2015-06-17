@@ -31,11 +31,11 @@ class StepManager:
         # Extract variables
         current_step = self.steps[step_name]
         dependency = self.dependencies[step_name]
-        dir_name = current_step.get_dir_name()
-        suffix = current_step.suffix
+        dir_name = current_step.params['dir_name']
+        suffix = current_step.params['suffix']
         if dependency is not None:
-            input_dir = self.steps[dependency].get_dir_name()
-            input_suffix = self.steps[dependency].suffix
+            input_dir = self.steps[dependency].params['dir_name']
+            input_suffix = self.steps[dependency].params['suffix']
 
         # Get IO
         merged = self.get_merged(step_name)
