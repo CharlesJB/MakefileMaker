@@ -86,3 +86,24 @@ def test_filelist_unlist_dir_name_suffix():
     fl = FileList(VALID_FILELIST_FULL)
     eq_(fl.unlist("abc", ".txt"), ['abc/a.txt', 'abc/b.txt', 'abc/c.txt', 'abc/d.txt'])
     eq_(fl.unlist("abc"), ['abc/a', 'abc/b', 'abc/c', 'abc/d'])
+
+def test_filelist_split_TT():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.split(True, True)[0].file_list, FileList([['a','b'],['c','d']]).file_list)
+
+def test_filelist_split_FF():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.split(False, False)[0].file_list, FileList([['a','']]).file_list)
+    eq_(fl.split(False, False)[1].file_list, FileList([['b','']]).file_list)
+    eq_(fl.split(False, False)[2].file_list, FileList([['c','']]).file_list)
+    eq_(fl.split(False, False)[3].file_list, FileList([['d','']]).file_list)
+
+def test_filelist_split_TF():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.split(True, False)[0].file_list, FileList([['a',''],['c','']]).file_list)
+    eq_(fl.split(True, False)[1].file_list, FileList([['b',''],['d','']]).file_list)
+
+def test_filelist_split_FT():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.split(False, True)[0].file_list, FileList([['a','b']]).file_list)
+    eq_(fl.split(False, True)[1].file_list, FileList([['c','d']]).file_list)

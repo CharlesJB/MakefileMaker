@@ -61,12 +61,29 @@ class FileList:
                 files.append(file2)
         return(files)
 
-    # TODO: Unit Tests
-    def unlist_file1(self):
-        return(self._unlist_file(0))
-
-    def unlist_file2(self):
-        return(self._unlist_file(1))
+    def split(self, merge, pair):
+        results = []
+        if not merge and not pair:
+            for file_name in self.unlist():
+                results.append(FileList([[file_name, '']]))
+        elif merge and not pair:
+            files_R1 = self._unlist_file(0)
+            files_R2 = self._unlist_file(1)
+            r1 = []
+            for file_name in files_R1:
+                r1.append([file_name, ''])
+            results.append(FileList(r1))
+            if len(files_R2) > 0:
+                r2 = []
+                for file_name in files_R2:
+                    r2.append([file_name, ''])
+                results.append(FileList(r2))
+        elif not merge and pair:
+            for file_list in self.file_list:
+                results.append(FileList([[file_list[0], file_list[1]]]))
+        else:
+            results = [self]
+        return(results)
 
     def _unlist_file(self, idx):
         files = []
