@@ -60,8 +60,10 @@ class Step:
     def produce_recipe(self, inputs, outputs):
         self._validate_params(inputs, outputs)
         # Target
-        target = self._list_files(outputs)
-        dependencies  = self._list_files(inputs)
+        target = " ".join(outputs.unlist())
+        dependencies = inputs
+        if inputs != "":
+            dependencies  = " ".join(inputs.unlist())
         if len(dependencies) > 0:
             recipe = target + ": " + dependencies + "\n"
         else:
@@ -81,12 +83,6 @@ class Step:
                         self.params[param] = new_param
                     except ConfigParser.NoOptionError:
                         pass
-
-    def _list_files(self, file_lists):
-        result = []
-        for file_list in file_lists:
-            result += file_list.unlist()
-        return(" ".join(result))
 
     def _valid(self):
         error = False
@@ -108,34 +104,19 @@ class Step:
     def _validate_params(self, inputs, outputs):
         msg = "Step: _validate_params: "
         error = False
-        if not isinstance(inputs, list):
-            msg += "inputs/outputs should be list."
+        if not isinstance(inputs, FileList) and inputs != "":
+            msg += "inputs/outputs should be FileList."
+            error = True
+        if not isinstance(outputs, FileList):
+            msg += "outputs should be a FileList."
             error = True
         else:
-            if not isinstance(inputs, list):
-                msg += "inputs should be a list."
+            if self.get_pair_status() and outputs.get_paired_status():
+                msg += "outputs cannot be paired when pair status is True."
                 error = True
-            else:
-                for inpt in inputs:
-                    if not isinstance(inpt, FileList):
-                        msg += "inputs must be FileList."
-                        error = True
-            if not isinstance(outputs, list):
-                msg += "outputs should be a list."
+            if self.get_merge_status() and outputs.get_file_count() > 1:
+                msg += "outputs FileList cannot contain more than 1 file when merge status is True."
                 error = True
-            elif len(outputs) < 1:
-                msg += "outputs should have at least one entry"
-            else:
-                for output in outputs:
-                    if not isinstance(output, FileList):
-                        msg += "outputs must be FileList."
-                        error = True
-                    if self.get_pair_status() and output.get_paired_status():
-                        msg += "outputs cannot be paired when pair status is True."
-                        error = True
-                    if self.get_merge_status() and output.get_file_count() > 1:
-                        msg += "outputs FileList cannot contain more than 1 file when merge status is True."
-                        error = True
         if error == True:
             sys.stderr.write(msg)
             sys.exit(1)
@@ -166,14 +147,14 @@ class DummyStep(Step):
     def _set_step_specific_values(self):
         self.name = "DummyStep"
         self.dir_name = "Dummy"
+        self.suffix = ".txt"
         self.merge_status = True
         self.pair_status = True
         self.keep_pair_together_status = False
 
     # To implement in each Step
     def _get_command(self, dependencies, outputs):
-        command = ""
-        command += "\t@echo $@\n"
+        command = "\t@echo $@\n"
         command += "\t@echo $^\n"
         return(command)
 
@@ -186,9 +167,6 @@ class DummyStep(Step):
     def _validate_param_step_specific(self, inputs, outputs):
         error=False
         msg = "DummyStep - _validate_param_step_specific: "
-        if len(outputs) != 1:
-            msg += "outputs must be of length 1."
-            error = True
         if error == True:
             sys.stderr.write(msg)
             sys.exit(1)

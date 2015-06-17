@@ -70,9 +70,9 @@ def test_dummy_step_get_step_specific_variables():
     ds = DummyStep([VALID_CONFIG_FILE_1])
     eq_(ds.get_step_specific_variables(), "ABC=DEF")
 
-def test_dummy_step_get_target():
+def test_dummy_step_get_targets():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_target(), "TARGET_DUMMY=dummy.txt")
+    eq_(ds.get_targets([]), "TARGET_DUMMY=dummy.txt")
 
 def test_dummy_step_get_phony_target():
     ds = DummyStep([VALID_CONFIG_FILE_1])
@@ -80,35 +80,35 @@ def test_dummy_step_get_phony_target():
 
 def test_dummy_step_produce_recipe():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_2], [FILE_LIST_UNPAIRED_1])
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_2, FILE_LIST_UNPAIRED_1)
     eq_(recipe, '1_R1: 2_R1 2_R2\n\t@echo $@\n\t@echo $^\n')
 
 def test_dummy_step_produce_recipe_empty_input():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([], [FILE_LIST_UNPAIRED_1])
+    recipe = ds.produce_recipe("", FILE_LIST_UNPAIRED_1)
     eq_(recipe, '1_R1:\n\t@echo $@\n\t@echo $^\n')
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_input_length():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], [FILE_LIST_2_FILES])
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, FILE_LIST_2_FILES)
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_input_class():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, [FILE_LIST_UNPAIRED_1])
+    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], FILE_LIST_UNPAIRED_1)
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_output_class():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], FILE_LIST_UNPAIRED_1)
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, [FILE_LIST_UNPAIRED_1])
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_output_merge():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], [FILE_LIST_2_FILES])
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, FILE_LIST_2_FILES)
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_output_pair():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], [FILE_LIST_PAIRED_1])
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, FILE_LIST_PAIRED_1)
