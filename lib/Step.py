@@ -48,23 +48,14 @@ class Step:
     def get_step_specific_variables(self):
         pass
 
-    # To implement in each Step
-    def get_targets(self, outputs):
-        pass
-
-    # To implement in each Step
-    def get_phony_target(self):
-        pass
-
-    # inputs and outputs are list of FileList
-    def produce_recipe(self, inputs, outputs):
+    # inputs and outputs are FileList
+    def produce_recipe(self, inputs, outputs, input_dir_name = None, input_suffix = None):
         self._validate_params(inputs, outputs)
         # Target
-        target = " ".join(outputs.unlist())
+        target = " ".join(outputs.unlist(self.dir_name, self.suffix))
         dependencies = inputs
-        if inputs != "":
-            dependencies  = " ".join(inputs.unlist())
-        if len(dependencies) > 0:
+        if inputs is not None:
+            dependencies  = " ".join(inputs.unlist(input_dir_name, input_suffix))
             recipe = target + ": " + dependencies + "\n"
         else:
             recipe = target + ":\n"
@@ -104,7 +95,7 @@ class Step:
     def _validate_params(self, inputs, outputs):
         msg = "Step: _validate_params: "
         error = False
-        if not isinstance(inputs, FileList) and inputs != "":
+        if inputs is not None and not isinstance(inputs, FileList) and inputs != "":
             msg += "inputs/outputs should be FileList."
             error = True
         if not isinstance(outputs, FileList):
@@ -134,14 +125,6 @@ class DummyStep(Step):
     # To implement in each Step
     def get_step_specific_variables(self):
         return("ABC=DEF")
-
-    # To implement in each Step
-    def get_targets(self, outputs):
-        return("TARGET_DUMMY=dummy.txt")
-
-    # To implement in each Step
-    def get_phony_target(self):
-        return("dummy: $(TARGET_DUMMY)")
 
     # To implement in each Step
     def _set_step_specific_values(self):

@@ -10,7 +10,6 @@ FILE_1_R2 = '1_R2'
 FILE_2_R1 = '2_R1'
 FILE_2_R2 = '2_R2'
 FILE_LIST_UNPAIRED_1 = FileList([[FILE_1_R1, '']])
-#FILE_LIST_UNPAIRED_2 = FileList([[FILE_2_R1, '']])
 FILE_LIST_PAIRED_1 = FileList([[FILE_1_R1, FILE_1_R2]])
 FILE_LIST_PAIRED_2 = FileList([[FILE_2_R1, FILE_2_R2]])
 FILE_LIST_2_FILES = FileList([[FILE_1_R1, ''], [FILE_2_R1, '']])
@@ -70,23 +69,15 @@ def test_dummy_step_get_step_specific_variables():
     ds = DummyStep([VALID_CONFIG_FILE_1])
     eq_(ds.get_step_specific_variables(), "ABC=DEF")
 
-def test_dummy_step_get_targets():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_targets([]), "TARGET_DUMMY=dummy.txt")
-
-def test_dummy_step_get_phony_target():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_phony_target(), "dummy: $(TARGET_DUMMY)")
-
 def test_dummy_step_produce_recipe():
     ds = DummyStep([VALID_CONFIG_FILE_1])
     recipe = ds.produce_recipe(FILE_LIST_PAIRED_2, FILE_LIST_UNPAIRED_1)
-    eq_(recipe, '1_R1: 2_R1 2_R2\n\t@echo $@\n\t@echo $^\n')
+    eq_(recipe, 'Dummy/1_R1.txt: 2_R1 2_R2\n\t@echo $@\n\t@echo $^\n')
 
 def test_dummy_step_produce_recipe_empty_input():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe("", FILE_LIST_UNPAIRED_1)
-    eq_(recipe, '1_R1:\n\t@echo $@\n\t@echo $^\n')
+    recipe = ds.produce_recipe(None, FILE_LIST_UNPAIRED_1)
+    eq_(recipe, 'Dummy/1_R1.txt:\n\t@echo $@\n\t@echo $^\n')
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_input_length():
