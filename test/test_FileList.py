@@ -72,3 +72,17 @@ def test_filelist_unlist_full():
 def test_filelist_unlist_partial():
     fl = FileList(VALID_FILELIST_EMPTY_KEY_2)
     eq_(fl.unlist(), ['a','b','c'])
+
+def test_filelist_unlist_dir_name():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.unlist("abc"), ['abc/a', 'abc/b', 'abc/c', 'abc/d'])
+
+def test_filelist_unlist_suffix():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.unlist(None, ".txt"), ['a.txt', 'b.txt', 'c.txt', 'd.txt'])
+    fl = FileList(VALID_FILELIST_FULL)
+
+def test_filelist_unlist_dir_name_suffix():
+    fl = FileList(VALID_FILELIST_FULL)
+    eq_(fl.unlist("abc", ".txt"), ['abc/a.txt', 'abc/b.txt', 'abc/c.txt', 'abc/d.txt'])
+    eq_(fl.unlist("abc"), ['abc/a', 'abc/b', 'abc/c', 'abc/d'])

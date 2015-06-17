@@ -33,12 +33,32 @@ class FileList:
             return(to_return)
         return(files)
 
-    def unlist(self):
+    def unlist(self, dir_name = None, suffix = None):
+        if not dir_name is None:
+            if not isinstance(dir_name, basestring) or len(dir_name) < 1:
+                msg = "unlist: dir_name must be None of a basetring of len > 0."
+                sys.stderr.write(msg)
+                sys.exit(1)
+        if not suffix is None:
+            if not isinstance(suffix, basestring) or len(suffix) < 1:
+                msg = "unlist: suffix must be None of a basetring of len > 0."
+                sys.stderr.write(msg)
+                sys.exit(1)
         files = []
         for file_list in self.file_list:
-            files.append(file_list[0])
-            if len(file_list[1]) > 0:
-                files.append(file_list[1])
+            file1 = file_list[0]
+            if not dir_name is None:
+                file1 = dir_name + "/" + file1
+            if not suffix is None:
+                file1 = file1 + suffix
+            files.append(file1)
+            file2 = file_list[1]
+            if len(file2) > 0:
+                if not dir_name is None:
+                    file2 = dir_name + "/" + file2
+                if not suffix is None:
+                    file2 = file2 + suffix
+                files.append(file2)
         return(files)
 
     # TODO: Unit Tests
