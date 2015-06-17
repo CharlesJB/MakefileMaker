@@ -12,7 +12,6 @@ from lib.FileList import *
 class Step:
     def __init__(self, config_files):
         self.params = {}
-        self._set_default_params()
 
         # Step specific values, to set in _set_step_specific_values
         self.name = ""
@@ -26,6 +25,7 @@ class Step:
         self._valid()
 
         # Prepare config file
+        self._set_default_params()
         self._parse_config()
 
     def get_name(self):
@@ -63,13 +63,19 @@ class Step:
         if len(self.config_files) > 0:
             for config_file in self.config_files:
                 config_parser.read(config_file)
-            if self.name in config_parser.sections():
-                for param in self.params.keys():
+            for param in self.params:
+                try:
+                    new_param = config_parser.get(self.name, param)
+                    self.params[param] = new_param
+                except ConfigParser.NoSectionError:
+                    # TODO: Add test for this case
                     try:
-                        new_param = config_parser.get(self.name, param)
+                        new_param = config_parser.get("DEFAULT", param)
                         self.params[param] = new_param
                     except ConfigParser.NoOptionError:
                         pass
+                except ConfigParser.NoOptionError:
+                    pass
 
     def _valid(self):
         error = False
