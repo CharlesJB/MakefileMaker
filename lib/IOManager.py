@@ -37,6 +37,12 @@ class IOManager:
         self.raw_files = raw_files
         self._validate_raw_files()
 
+    def generate_inputs(self, merged, paired, merge, pair):
+        inputs = []
+        for name in self.raw_files.keys():
+            inputs += self.generate_input(name, merged, paired, merge, pair)
+        return(inputs)
+
     def generate_input(self, name, merged, paired, merge, pair):
         if name not in self.raw_files:
             msg = "generate_input: invalid name"
@@ -175,6 +181,12 @@ class IOManager:
             results.append(file_list)
 
         return(results)
+
+    def generate_outputs(self, merged, paired, merge, pair):
+        outputs = []
+        for name in self.raw_files.keys():
+            outputs += self.generate_output(name, merged, paired, merge, pair)
+        return(outputs)
 
     def generate_output(self, name, merged, paired, merge, pair):
         if name not in self.raw_files:
