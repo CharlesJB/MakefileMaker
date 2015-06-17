@@ -2,218 +2,227 @@ from nose.tools import *
 from lib.StepManager import *
 from lib.SampleManager import *
 
-class NullWriter:
-    def write(self, s):
-        pass
-#sys.stderr = NullWriter()
-
-# TESTS: StepInfos
-
-VALID_STEP_NAME = "valid_step_name"
-VALID_NAME = "valid_name"
-VALID_DIR_NAME = "valid_dir_name"
-VALID_DEPENDENCIES = [FileList([['a','b'],['c','d']], VALID_NAME)]
-VALID_OUTPUTS = [FileList([['e','f'],['g','h']], VALID_NAME)]
-VALID_PAIR = True
-VALID_MERGE = False
-
-def test_step_infos_constructor_valid_params():
-    ok_(StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE))
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_step_name_type():
-    StepInfos(1, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_step_name_length():
-    StepInfos("", VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_dir_name_type():
-    StepInfos(VALID_STEP_NAME, 1, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-    
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_dir_name_length():
-    StepInfos(VALID_STEP_NAME,  "", VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_dependencies_type():
-    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, 1, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-
-#@raises(SystemExit)
-#def test_step_infos_constructor_invalid_empty_dependencies():
-#    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, [], VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-#
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_outputs_type():
-    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, 1, VALID_PAIR, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_empty_outputs():
-    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, [], VALID_PAIR, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_pair_type():
-    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, 1, VALID_MERGE)
-
-@raises(SystemExit)
-def test_step_infos_constructor_invalid_merge_type():
-    StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, 1)
-
-def test_step_infos_get_step_name():
-    step = StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-    eq_(step.get_step_name(), VALID_STEP_NAME)
-
-def test_step_infos_get_dir_name():
-    step = StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-    eq_(step.get_dir_name(), VALID_DIR_NAME)
-
-def test_step_infos_get_dependencies():
-    step = StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-    eq_(step.get_dependencies(), VALID_DEPENDENCIES)
-
-def test_step_infos_get_outputs():
-    step = StepInfos(VALID_STEP_NAME, VALID_DIR_NAME, VALID_DEPENDENCIES, VALID_OUTPUTS, VALID_PAIR, VALID_MERGE)
-    eq_(step.get_outputs(), VALID_OUTPUTS)
-
-
-# TESTS: StepManager
-
-VALID_STEP_NAME_1 = "valid_step_name_1"
-VALID_STEP_NAME_2 = "valid_step_name_2"
-VALID_SUFFIX_1 = ".valid_suffix_1"
-VALID_SUFFIX_2 = ".valid_suffix_2"
-VALID_DIR_NAME_1 = "valid_dir_name_1"
-VALID_DIR_NAME_2 = "valid_dir_name_2"
-VALID_DEPENDENCY_EMPTY = []
-VALID_DEPENDENCY_1 = [VALID_STEP_NAME_1]
+# Valid IOManager
 VALID_SAMPLESHEET = "raw_data/valid_samplesheet.txt"
-VALID_SAMPLE_MANAGER = SampleManager(VALID_SAMPLESHEET)
-VALID_PAIR_TRUE = True
-VALID_PAIR_FALSE = False
-VALID_MERGE_TRUE = True
-VALID_MERGE_FALSE = False
+SAMPLE_MANAGER = SampleManager(VALID_SAMPLESHEET)
+VALID_RAW_FILES = {}
+VALID_RAW_FILES['test1'] = SAMPLE_MANAGER.get_file_list('test1')
+VALID_RAW_FILES['test2'] = SAMPLE_MANAGER.get_file_list('test2')
+IO_MANAGER = IOManager(VALID_RAW_FILES)
 
-def test_step_manager_constructor_valid_params():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    eq_(sm.steps_info, [])
-    eq_(sm.step_names, [])
-    eq_(isinstance(sm.sample_manager, SampleManager), True)
+# Valid Steps
+VALID_CONFIG_FILE = "raw_data/valid_dummy_1.ini"
+# 1. merge
+class TestStep1(Step):
+    def get_step_specific_variables(self):
+        return("ABC=DEF")
+    def _set_step_specific_values(self):
+        self.name = "Step1"
+        self.dir_name = "Step1"
+        self.suffix = ".txt"
+        self.merge_status = True
+        self.pair_status = False
+    def _get_command(self, dependencies, outputs):
+        return("\ttouch $@")
+    def _set_default_params(self):
+        pass
+    def _validate_param_step_specific(self, inputs, outputs):
+        pass
+
+step1 = TestStep1([VALID_CONFIG_FILE])
+# 2. pair
+class TestStep2(Step):
+    def get_step_specific_variables(self):
+        return("")
+    def _set_step_specific_values(self):
+        self.name = "Step2"
+        self.dir_name = "Step2"
+        self.suffix = ".csv"
+        self.merge_status = False
+        self.pair_status = True
+    def _get_command(self, dependencies, outputs):
+        return("\ttouch $@")
+    def _set_default_params(self):
+        pass
+    def _validate_param_step_specific(self, inputs, outputs):
+        pass
+
+step2 = TestStep2([VALID_CONFIG_FILE])
+
+# TODO
+# 3. depend 2
+class TestStep3(Step):
+    def get_step_specific_variables(self):
+        return("")
+    def _set_step_specific_values(self):
+        self.name = "Step3"
+        self.dir_name = "Step3"
+        self.merge_status = False
+        self.pair_status = False
+    def _get_command(self, dependencies, outputs):
+        return("\ttouch $@")
+    def _set_default_params(self):
+        pass
+    def _validate_param_step_specific(self, inputs, outputs):
+        pass
+
+step3 = TestStep3([VALID_CONFIG_FILE])
+# 4. Merge #2
+class TestStep4(Step):
+    def get_step_specific_variables(self):
+        return("")
+    def _set_step_specific_values(self):
+        self.name = "Step4"
+        self.dir_name = "Step4"
+        self.merge_status = True
+        self.pair_status = False
+    def _get_command(self, dependencies, outputs):
+        return("touch $@")
+    def _set_default_params(self):
+        pass
+    def _validate_param_step_specific(self, inputs, outputs):
+        pass
+
+step4 = TestStep4([VALID_CONFIG_FILE])
+# 5. Pair #2
+class TestStep5(Step):
+    def get_step_specific_variables(self):
+        return("")
+    def _set_step_specific_values(self):
+        self.name = "Step5"
+        self.dir_name = "Step5"
+        self.merge_status = False
+        self.pair_status = True
+    def _get_command(self, dependencies, outputs):
+        return("touch $@")
+    def _set_default_params(self):
+        pass
+    def _validate_param_step_specific(self, inputs, outputs):
+        pass
+
+step5 = TestStep5([VALID_CONFIG_FILE])
+
+def test_step_manager_constructor_valid_io():
+    sm = StepManager(IO_MANAGER)
+    eq_(sm.io_manager, IO_MANAGER)
 
 @raises(SystemExit)
-def test_step_manager_constructor_invalid_sample_manager_type():
+def test_step_manager_constructor_invalid_io():
     StepManager(1)
 
-def test_get_dependencies():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    dep = sm._get_dependencies([VALID_STEP_NAME_1])
-#    eq_(dep, "A")
-#    eq_(dep[0], "A")
-#    eq_(isinstance(dep[0], FileList), "A")
-#    eq_(isinstance(sm.steps_info[0].get_outputs(), list), "A")
-#    eq_(sm._get_dependencies([VALID_STEP_NAME_1])[0].get_outputs()[0].file_list, "A")
+def test_step_manager_register_step():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    eq_(sm.steps["Step1"], step1)
+    eq_(sm.dependencies["Step1"], None)
 
-def test_step_manager_register_step_valid_params_1_step():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(sm.step_names, [VALID_STEP_NAME_1])
-    eq_(isinstance(sm.steps_info[0], StepInfos), True)
-    eq_(sm.steps_info[0].get_step_name(), VALID_STEP_NAME_1)
-    eq_(sm.steps_info[0].get_dir_name(), VALID_DIR_NAME_1)
-    eq_(sm.steps_info[0].get_dependencies(), VALID_DEPENDENCY_EMPTY)
-    eq_(len(sm.steps_info[0].get_outputs()), 2)
+def test_step_manager_register_multiple_steps():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    sm.register_step(step2, "Step1")
+    sm.register_step(step3, "Step2")
+    eq_(sm.steps["Step1"], step1)
+    eq_(sm.dependencies["Step1"], None)
+    eq_(sm.steps["Step2"], step2)
+    eq_(sm.dependencies["Step2"], "Step1")
+    eq_(sm.steps["Step3"], step3)
+    eq_(sm.dependencies["Step3"], "Step2")
 
-def test_step_manager_register_step_valid_params_2_steps():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(sm.step_names, [VALID_STEP_NAME_1])
-    sm.register_step(VALID_STEP_NAME_2, VALID_SUFFIX_2, VALID_DIR_NAME_2,
-                     VALID_DEPENDENCY_1, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    eq_(sm.step_names, [VALID_STEP_NAME_1, VALID_STEP_NAME_2])
-    eq_(isinstance(sm.steps_info[0], StepInfos), True)
-    eq_(isinstance(sm.steps_info[1], StepInfos), True)
-    eq_(sm.steps_info[0].get_step_name(), VALID_STEP_NAME_1)
-    eq_(sm.steps_info[0].get_dir_name(), VALID_DIR_NAME_1)
-    eq_(sm.steps_info[0].get_dependencies(), VALID_DEPENDENCY_EMPTY)
-    eq_(len(sm.steps_info[0].get_outputs()), 2)
-    eq_(sm.steps_info[1].get_step_name(), VALID_STEP_NAME_2)
-    eq_(sm.steps_info[1].get_dir_name(), VALID_DIR_NAME_2)
-    eq_(len(sm.steps_info[1].get_dependencies()), 2)
-    eq_(len(sm.steps_info[1].get_outputs()), 2)
+def test_step_manager_register_same_step_multiple_time():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    sm.register_step(step1, None)
+    eq_(sm.steps["Step1"], step1)
+    eq_(sm.dependencies["Step1"], None)
+    sm.register_step(step2, None)
+    eq_(sm.steps["Step2"], step2)
+    eq_(sm.dependencies["Step2"], None)
+    sm.register_step(step2, "Step1")
+    eq_(sm.steps["Step2"], step2)
+    eq_(sm.dependencies["Step2"], "Step1")
 
 @raises(SystemExit)
-def test_step_manager_register_step_invalid_step_name_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_register_name_invalid_step_class():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step("step1", None)
 
 @raises(SystemExit)
-def test_step_manager_register_step_invalid_step_name_length():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step("", VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_register_name_invalid_dependency_class():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, ["a"])
 
 @raises(SystemExit)
-def test_step_manager_register_step_invalid_suffix_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, 1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_suffix_length():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, "", VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_register_name_invalid_dependency_not_present():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step2, "Step1")
 
 @raises(SystemExit)
-def test_step_manager_register_step_invalid_dir_name_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, 1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_dir_name_length():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, "",
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_register_name_invalid_already_merged():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    sm.register_step(step2, "Step1")
+    sm.register_step(step4, "Step1")
 
 @raises(SystemExit)
-def test_step_manager_register_step_invalid_dependency_name_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     1, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_dependency_name_length():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     "", VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_register_name_invalid_already_paired():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    sm.register_step(step2, "Step1")
+    sm.register_step(step5, "Step2")
 
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_dependency_name_no_registered():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_STEP_NAME_1, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
+def test_step_manager_get_makefile_step_1():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    exp = '# Step specific variables\n'
+    exp += 'STEP1_DIR_NAME=Step1\n'
+    exp += 'ABC=DEF\n'
+    exp += '\n'
+    exp += '# Targets\n'
+    exp += 'STEP1_TARGETS+=Step1/test1_R1.txt\n'
+    exp += 'STEP1_TARGETS+=Step1/test1_R2.txt\n'
+    exp += 'STEP1_TARGETS+=Step1/test2_R1.txt\n'
+    exp += 'STEP1_TARGETS+=Step1/test2_R2.txt\n'
+    exp += '\n'
+    exp += '# Phony targets\n'
+    exp += '.PHONY: Step1\n'
+    exp += 'Step1: $(STEP1_TARGETS)\n'
+    exp += '\n'
+    exp += '# Recipes\n'
+    exp += 'Step1/test1_R1.txt:\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    exp += 'Step1/test1_R2.txt:\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    exp += 'Step1/test2_R1.txt:\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    exp += 'Step1/test2_R2.txt:\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    eq_(sm.produce_makefile("Step1"), exp)
 
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_dependency_name_not_registered():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-    sm.register_step(VALID_STEP_NAME_2, VALID_SUFFIX_2, VALID_DIR_NAME_2,
-                     ["absent_dependency"], VALID_PAIR_FALSE, VALID_MERGE_FALSE)
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_pair_data_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, 1, VALID_MERGE_FALSE)
-    
-@raises(SystemExit)
-def test_step_manager_register_step_invalid_merge_data_type():
-    sm = StepManager(VALID_SAMPLE_MANAGER)
-    sm.register_step(VALID_STEP_NAME_1, VALID_SUFFIX_1, VALID_DIR_NAME_1,
-                     VALID_DEPENDENCY_EMPTY, 1, VALID_MERGE_FALSE)
+def test_step_manager_get_makefile_step_2():
+    sm = StepManager(IO_MANAGER)
+    sm.register_step(step1, None)
+    sm.register_step(step2, "Step1")
+    exp = '# Step specific variables\n'
+    exp += 'STEP2_DIR_NAME=Step2\n'
+    exp += '\n'
+    exp += '\n'
+    exp += '# Targets\n'
+    exp += 'STEP2_TARGETS+=Step2/test1.csv\n'
+    exp += 'STEP2_TARGETS+=Step2/test2.csv\n'
+    exp += '\n'
+    exp += '# Phony targets\n'
+    exp += '.PHONY: Step2\n'
+    exp += 'Step2: $(STEP2_TARGETS)\n'
+    exp += '\n'
+    exp += '# Recipes\n'
+    exp += 'Step2/test1.csv: Step1/test1_R1.txt Step1/test1_R2.txt\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    exp += 'Step2/test2.csv: Step1/test2_R1.txt Step1/test2_R2.txt\n'
+    exp += '\ttouch $@\n'
+    exp += '\n'
+    eq_(sm.produce_makefile("Step2"), exp)

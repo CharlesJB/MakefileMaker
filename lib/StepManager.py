@@ -5,165 +5,169 @@
 
 import sys
 import os
-from lib.SampleManager import *
+from lib.IOManager import *
+from lib.Step import *
 
-class StepInfos:
-    def __init__(self, step_name, dir_name, dependencies, outputs, pair_data = False, merge_data = False):
-        self.params = {}
-        self.params["step_name"] = step_name
-        self.params["dir_name"] = dir_name
-        self.params["pair_data"] = pair_data
-        self.params["merge_data"] = merge_data
-
-        self.dependencies = dependencies
-        self.outputs = outputs
-
+class StepManager:
+    def __init__(self, io_manager):
+        self.steps = {}
+        self.dependencies = {}
+        self.io_manager = io_manager
         self._valid()
 
-    def get_step_name(self):
-        return(self.params["step_name"])
+    def register_step(self, step, dependency_name):
+        if not isinstance(step, Step):
+            msg = "register_step: invalid step class."
+            sys.stderr.write(msg)
+            sys.exit(1)
+        self._validate_dependencies(dependency_name, "register_step: ")
+        self.steps[step.get_name()] = step
+        self.dependencies[step.get_name()] = dependency_name
+        self._validate_step(step.get_name(), "register_step: ")
 
-    def get_dir_name(self):
-        return(self.params["dir_name"])
+    def produce_makefile(self, step_name):
+        self._validate_step_name(step_name, "get_makefile: ")
 
-    def get_dependencies(self):
-        return(self.dependencies)
+        # Extract variables
+        current_step = self.steps[step_name]
+        dependency = self.dependencies[step_name]
+        dir_name = current_step.get_dir_name()
+        suffix = current_step.suffix
+        if dependency is not None:
+            input_dir = self.steps[dependency].get_dir_name()
+            input_suffix = self.steps[dependency].suffix
 
-    def get_outputs(self):
-        return(self.outputs)
+        # Get IO
+        merged = self.get_merged(step_name)
+        paired = self.get_paired(step_name)
+        merge = self.get_merge(step_name)
+        pair = self.get_pair(step_name)
+        outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
+        if dependency is not None:
+            inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
+            if len(inputs) != len(outputs):
+                msg = "produce_makefile: len(inputs) != len(outputs)."
+                sys.stderr.write(msg)
+                sys.exit(1)
 
-    def _valid(self):
+        makefile = ""
+        # 1. Step specific variables
+        makefile += "# Step specific variables\n"
+        makefile += step_name.upper() + "_DIR_NAME=" + dir_name + "\n"
+        makefile += current_step.get_step_specific_variables() + "\n"
+        makefile += "\n"
+
+        # 2. Targets
+        makefile += "# Targets\n"
+        for file_list in outputs:
+            for file_name in file_list.unlist():
+                makefile += step_name.upper() + "_TARGETS+="
+                makefile += dir_name + "/" + file_name + suffix + "\n"
+        makefile += "\n"
+
+        # 3. Phony targets
+        makefile += "# Phony targets\n"
+        makefile += ".PHONY: " + step_name + "\n"
+        makefile += step_name + ": $(" + step_name.upper() + "_TARGETS)" + "\n"
+        makefile += "\n"
+ 
+        # 4. Recipes
+        makefile += "# Recipes\n"
+        for i,_ in enumerate(outputs):
+            if dependency is not None:
+                makefile += current_step.produce_recipe(inputs[i], outputs[i], input_dir, input_suffix) + "\n"
+            else:
+                makefile += current_step.produce_recipe(None, outputs[i], None, None) + "\n"
+            makefile += "\n"
+
+        return(makefile)
+
+    def get_merge(self, step_name):
+        self._validate_step_name(step_name, "get_merge: ")
+        return(self.steps[step_name].get_merge_status())
+
+    def get_pair(self, step_name):
+        self._validate_step_name(step_name, "get_pair: ")
+        return(self.steps[step_name].get_pair_status())
+
+    def get_merged(self, step_name):
+        self._validate_step_name(step_name, "get_merged: ")
+        dependency = self.dependencies[step_name]
+        if dependency is None:
+            return(False)
+        if self.get_merge(dependency):
+            return(True)
+        if self.get_merged(dependency):
+            return(True)
+        return(False)
+
+    def get_paired(self, step_name):
+        self._validate_step_name(step_name, "get_paired: ")
+        dependency = self.dependencies[step_name]
+        if dependency is None:
+            return(False)
+        if self.get_pair(dependency):
+            return(True)
+        if self.get_paired(dependency):
+            return(True)
+        return(False)
+
+    def _validate_dependencies(self, dependency, base_msg):
         error = False
-        msg = ""
-        if not isinstance(self.params["step_name"], basestring):
-            msg += "StepInfos: param \"step_name\" not a basestring.\n"
-            error = True
-        elif len(self.params["step_name"]) < 1:
-            msg += "StepInfos: param \"step_name\" must be at least one char long.\n"
-            error = True
-        if not isinstance(self.params["dir_name"], basestring):
-            msg += "StepInfos: param \"dir_name\" not a basestring.\n"
-            error = True
-        elif len(self.params["dir_name"]) < 1:
-            msg += "StepInfos: param \"dir_name\" must be at least one char long.\n"
-            error = True
-        if not isinstance(self.dependencies, list):
-            msg += "StepInfos: param \"dependencies\" should be a list.\n"
-            error = True
-#        elif len(self.dependencies) < 1:
-#            msg += "StepInfos: param \"dependencies\" should contains at least one FileList.\n"
-#            error = True
-        else:
-            for dependency in self.dependencies:
-                if not isinstance(dependency, FileList):
-                    msg += "StepInfos: param \"dependencies\" entries should be FileList.\n"
-                    error = True
-        if not isinstance(self.outputs, list):
-            msg += "StepInfos: param \"outputs\" should be a list.\n"
-            error = True
-        elif len(self.outputs) < 1:
-            msg += "StepInfos: param \"outputs\" should contains at least one FileList.\n"
-            error = True
-        else:
-            for output in self.outputs:
-                if not isinstance(output, FileList):
-                    msg += "StepInfos: param \"outputs\" entries should be FileList.\n"
-                    error = True
-        if not isinstance(self.params["pair_data"], bool):
-            msg += "StepInfos: param \"pair_data\" not a basestring.\n"
-            error = True
-        if not isinstance(self.params["merge_data"], bool):
-            msg += "StepInfos: param \"merge_data\" not a basestring.\n"
-            error = True
-        if error == True:
+        msg = base_msg
+        if dependency is not None:
+            if not isinstance(dependency, basestring) or len(dependency) < 1:
+                msg += "dependency must be a basestring."
+                error = True
+            elif dependency not in self.dependencies:
+                msg += "missing dependency " + dependency + "."
+                error = True
+        if error:
             sys.stderr.write(msg)
             sys.exit(1)
 
+    def _validate_step(self, step_name, base_msg):
+        error = False
+        msg = base_msg
+        # Valid merge
+        if self.get_merged(step_name) and self.get_merge(step_name):
+            msg += "error in step " + step_name + ", cannot merge twice."
+            error = True
+        # Valid pair
+        if self.get_paired(step_name) and self.get_pair(step_name):
+            msg += "error in step " + step_name + ", cannot pair twice."
+            error = True
+        if error:
+            sys.stderr.write(msg)
+            sys.exit(1)
 
-class StepManager:
-    def __init__(self, sample_manager):
-        self.steps_info = []
-        self.step_names = []
-        self.sample_manager = sample_manager
-        self._valid()
-
-    def register_step(self, step_name, suffix, dir_name, dependency_names, pair_data, merge_data):
-        self._validate_register_params(step_name, suffix, dir_name, dependency_names)
-        outputs = self.sample_manager.generate_outputs(dir_name, suffix, pair_data, merge_data)
-        dependencies = self._get_dependencies(dependency_names)
-        step_infos = StepInfos(step_name, dir_name, dependencies, outputs, pair_data, merge_data)
-        self.steps_info.append(step_infos)
-        self.step_names.append(step_name)
-
-    def _get_dependencies(self, dependency_names):
-        dependencies = []
-        for name in dependency_names:
-            i = self.step_names.index(name)
-            dependencies += self.steps_info[i].get_outputs()
-        return(dependencies)
+    def _validate_step_name(self, step_name, base_msg):
+        msg = base_msg
+        if step_name not in self.steps:
+            msg += "Invalid step_name."
+            sys.stderr.write(msg)
+            sys.exit(1)
 
     def _valid(self):
         error = False
         msg = "StepManager object is in invalid state.\n"
-        if not isinstance(self.steps_info, list):
-            msg += "self.steps_info is not a list.\n"
-            error = True
-        else:
-            for step_info in self.steps_info:
-                if not isinstance(step_info, StepInfo):
-                    msg += "step in self.steps is not a StepInfo\n"
-                    error = True
-        if not isinstance(self.step_names, list):
-            msg += "self.step_names is not a list.\n"
-            error = True
-        else:
-            for step_name in self.step_names:
-                if not isinstance(step_name, basestring):
-                    msg += "step_name in self.step_names is not a string.\n"
-                    error = True
-                elif len(step_name) < 1:
-                    msg += "step_name in self.step_names should be at least 1 character.\n"
-                    error = True
-        if not isinstance(self.sample_manager, SampleManager):
-            msg += "self.sample_manager is not a SampleManager.\n"
+        if not isinstance(self.io_manager, IOManager):
+            msg += "self.io_manager is not a IOManager.\n"
             error = True
         if error == True:
             sys.stderr.write(msg)
             sys.exit(1)
 
-    def _validate_register_params(self, step_name, suffix, dir_name, dependency_names):
+    def _validate_list_of_strings(self, list_of_strings, base_msg):
         error = False
-        msg = ""
-        if not isinstance(step_name, basestring):
-            msg += "register_step: step_name param should be a string.\n"
-            error = True
-        elif len(step_name) < 1:
-            msg += "register_step: step_name length should be greater than 0.\n"
-            error = True
-        if not isinstance(suffix, basestring):
-            msg += "register_step: suffix param should be a string.\n"
-            error = True
-        elif len(suffix) < 1:
-            msg += "register_step: suffix length should be greater than 0.\n"
-            error = True
-        if not isinstance(dir_name, basestring):
-            msg += "register_step: dir_name param should be a string.\n"
-            error = True
-        elif len(dir_name) < 1:
-            msg += "register_step: dir_name length should be greater than 0.\n"
-            error = True
-        if not isinstance(dependency_names, list):
-            msg += "register_step: dependency_names param should be a list.\n"
+        msg = base_msg
+        if not isinstance(list_of_strings, list):
+            msg += "param should be a list.\n"
             error = True
         else:
-            for name in dependency_names:
+            for name in list_of_strings:
                 if len(name) < 1:
-                    msg += "register_step: dependency_names key length should be greater than 0.\n"
-                    error = True
-                if name not in self.step_names:
-                    msg += "register_step: dependency "
-                    msg += name
-                    msg += " is not registered.\n"
+                    msg += "key length should be greater than 0.\n"
                     error = True
         if error == True:
             sys.stderr.write(msg)
