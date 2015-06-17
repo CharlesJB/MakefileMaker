@@ -46,7 +46,7 @@ class Step:
 
     # To implement in each Step
     def get_step_specific_variables(self):
-        pass
+        return(None)
 
     # inputs and outputs are FileList
     def produce_recipe(self, inputs, outputs, input_dir_name = None, input_suffix = None):

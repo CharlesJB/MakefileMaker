@@ -32,8 +32,6 @@ class TestStep1(Step):
 step1 = TestStep1([VALID_CONFIG_FILE])
 # 2. pair
 class TestStep2(Step):
-    def get_step_specific_variables(self):
-        return("")
     def _set_step_specific_values(self):
         self.name = "Step2"
         self.dir_name = "Step2"
@@ -208,7 +206,6 @@ def test_step_manager_get_makefile_step_2():
     sm.register_step(step2, "Step1")
     exp = '# Step specific variables\n'
     exp += 'STEP2_DIR_NAME=Step2\n'
-    exp += '\n'
     exp += '\n'
     exp += '# Targets\n'
     exp += 'STEP2_TARGETS+=Step2/test1.csv\n'

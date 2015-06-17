@@ -54,7 +54,9 @@ class StepManager:
         # 1. Step specific variables
         makefile += "# Step specific variables\n"
         makefile += step_name.upper() + "_DIR_NAME=" + dir_name + "\n"
-        makefile += current_step.get_step_specific_variables() + "\n"
+        spv = current_step.get_step_specific_variables()
+        if spv is not None:
+            makefile += current_step.get_step_specific_variables() + "\n"
         makefile += "\n"
 
         # 2. Targets
