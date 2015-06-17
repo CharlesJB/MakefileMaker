@@ -49,7 +49,7 @@ class Step:
         pass
 
     # To implement in each Step
-    def get_target(self):
+    def get_targets(self, outputs):
         pass
 
     # To implement in each Step
@@ -155,7 +155,7 @@ class DummyStep(Step):
         return("ABC=DEF")
 
     # To implement in each Step
-    def get_target(self):
+    def get_targets(self, outputs):
         return("TARGET_DUMMY=dummy.txt")
 
     # To implement in each Step
