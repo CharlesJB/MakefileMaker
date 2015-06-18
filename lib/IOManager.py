@@ -8,6 +8,7 @@ import os
 
 #from lib.FileList import *
 from lib.SampleManager import *
+from lib.DesignManager import *
 
 # 4 letter code to represent the IO status of current step:
 # merged: sample was merged on a previous step
@@ -34,8 +35,11 @@ from lib.SampleManager import *
 ## C1PF: 1 file, not paired
 
 class IOManager:
-    def __init__(self, sample_sheet):
+    def __init__(self, sample_sheet, design_file = None):
         self.sample_manager = SampleManager(sample_sheet)
+        self.design_manager = None
+        if design_file is not None:
+            self.design_manager = DesignManager(design_file)
         self.raw_files = self.sample_manager.get_raw_files()
         self._validate_raw_files()
 
@@ -57,6 +61,19 @@ class IOManager:
         for name in self.raw_files.keys():
             outputs += self._generate_output(name, merged, paired, merge, pair)
         return(outputs)
+
+    def generate_inputs_design(self):
+        if self.design_manager is not None:
+            inputs = []
+            for design_name in self.design_manager.get_design_names():
+                inputs += self._generate_input_design(design_name)
+            return(inputs)
+        return(None)
+
+    def generate_outputs_design(self):
+        if self.design_manager is not None:
+            return(self.design_manager.get_design_names())
+        return(None)
 
     def _get_files(self, idx, name, merge):
         if name is None:
@@ -92,6 +109,13 @@ class IOManager:
         if error == True:
             sys.stderr.write(msg)
             sys.exit(1)
+
+    def _generate_input_design(self, design_name):
+        inpt = []
+        dm = self.design_manager
+        for group in self.design_manager.get_groups(design_name):
+            inpt.append(dm.get_group_names(design_name, group_name))
+        return(inpt)
 
     def _generate_input(self, name, merged, paired, merge, pair):
         if name not in self.raw_files:

@@ -30,6 +30,7 @@ class StepManager:
 
         # Extract variables
         current_step = self.steps[step_name]
+        design_status = self.steps[step_name].design_status
         dependency = self.dependencies[step_name]
         dir_name = current_step.params['dir_name']
         suffix = current_step.params['suffix']
@@ -43,12 +44,18 @@ class StepManager:
         paired = self.get_paired(step_name)
         merge = self.get_merge(step_name)
         pair = self.get_pair(step_name)
-        outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
+        if not design_status:
+            outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
+        else:
+            outputs = self.io_manager.generate_outputs_design()
         # TODO: Unit tests
         if dependency is "raw_data":
             inputs = self.io_manager.generate_inputs_raw_data(merge, pair)
         elif dependency is not None:
-            inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
+            if not design_status:
+                inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
+            else:
+                inputs = self.io_manager.generate_inputs_design()
         if dependency is "raw_data" or dependency is not None:
             if len(inputs) != len(outputs):
                 msg = "produce_makefile: len(inputs) != len(outputs)."

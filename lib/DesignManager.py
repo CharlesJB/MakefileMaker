@@ -20,6 +20,15 @@ class DesignManager:
         self._file_names = []
         self._header = ""
 
+    def get_design_names(self):
+        return(self.exp_dict.keys())
+
+    def get_groups(self, design_name):
+        return(self.exp_dict[design_name].keys())
+
+    def get_group_names(self, design_name, group_name):
+        return(self.exp_dict[design_name][group_name])
+
     def _parse_design_file(self):
         design_file = self.params["design_file"]
         header = False
