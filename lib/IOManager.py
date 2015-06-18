@@ -39,6 +39,13 @@ class IOManager:
         self.raw_files = self.sample_manager.get_raw_files()
         self._validate_raw_files()
 
+    # TODO: Unit tests
+    def generate_inputs_raw_data(self, merge, pair):
+        results = []
+        for file_list in self.raw_files.values():
+            results += file_list.split(merge, pair)
+        return(results)
+
     def generate_inputs(self, merged, paired, merge, pair):
         inputs = []
         for name in self.raw_files.keys():

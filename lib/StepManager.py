@@ -33,7 +33,8 @@ class StepManager:
         dependency = self.dependencies[step_name]
         dir_name = current_step.params['dir_name']
         suffix = current_step.params['suffix']
-        if dependency is not None:
+
+        if dependency is not None and dependency is not "raw_data":
             input_dir = self.steps[dependency].params['dir_name']
             input_suffix = self.steps[dependency].params['suffix']
 
@@ -43,8 +44,12 @@ class StepManager:
         merge = self.get_merge(step_name)
         pair = self.get_pair(step_name)
         outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
-        if dependency is not None:
+        # TODO: Unit tests
+        if dependency is "raw_data":
+            inputs = self.io_manager.generate_inputs_raw_data(merge, pair)
+        elif dependency is not None:
             inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
+        if dependency is "raw_data" or dependency is not None:
             if len(inputs) != len(outputs):
                 msg = "produce_makefile: len(inputs) != len(outputs)."
                 sys.stderr.write(msg)
@@ -121,7 +126,7 @@ class StepManager:
     def _validate_dependencies(self, dependency, base_msg):
         error = False
         msg = base_msg
-        if dependency is not None:
+        if dependency is not None and dependency is not "raw_data":
             if not isinstance(dependency, basestring) or len(dependency) < 1:
                 msg += "dependency must be a basestring."
                 error = True
