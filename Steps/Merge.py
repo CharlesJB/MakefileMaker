@@ -20,7 +20,7 @@ class Merge(Step):
 
     def _set_default_params(self):
         self.params['dir_name'] = 'align'
-        self.params['suffix'] = 'merged.bam'
+        self.params['suffix'] = '.merged.bam'
 
     def _validate_param_step_specific(self, inputs, outputs):
         pass
