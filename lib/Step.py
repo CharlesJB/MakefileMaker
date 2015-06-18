@@ -34,13 +34,13 @@ class Step:
         return(None)
 
     # inputs and outputs are FileList
-    def produce_recipe(self, inputs, outputs, input_dir_name = None, input_suffix = None):
+    def produce_recipe(self, inputs, outputs, keep_pair = False):
         self._validate_params(inputs, outputs)
         # Target
         target = " ".join(outputs.unlist(self.params['dir_name'], self.params['suffix']))
         dependencies = inputs
         if inputs is not None:
-            dependencies  = " ".join(inputs.unlist(input_dir_name, input_suffix))
+            dependencies  = " ".join(inputs.unlist())
             recipe = target + ": " + dependencies + "\n"
         else:
             recipe = target + ":\n"

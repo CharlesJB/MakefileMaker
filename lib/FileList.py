@@ -85,6 +85,20 @@ class FileList:
             results = [self]
         return(results)
 
+    def add_prefix(self, prefix):
+        for i,_ in enumerate(self.file_list):
+            self.file_list[i][0] = prefix + self.file_list[i][0]
+            if len(self.file_list[i][1]) > 0:
+                self.file_list[i][1] = prefix + self.file_list[i][1]
+        return(self)
+
+    def add_suffix(self, suffix):
+        for i,_ in enumerate(self.file_list):
+            self.file_list[i][0] = self.file_list[i][0] + suffix
+            if len(self.file_list[i][1]) > 0:
+                self.file_list[i][1] = self.file_list[i][1] + suffix
+        return(self)
+
     def _unlist_file(self, idx):
         files = []
         for file_list in self.file_list:

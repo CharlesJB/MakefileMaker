@@ -31,6 +31,7 @@ class StepManager:
         # Extract variables
         current_step = self.steps[step_name]
         design_status = self.steps[step_name].design_status
+        keep_pair_together = self.steps[step_name].keep_pair_together_status
         dependency = self.dependencies[step_name]
         dir_name = current_step.params['dir_name']
         suffix = current_step.params['suffix']
@@ -46,6 +47,8 @@ class StepManager:
         pair = self.get_pair(step_name)
         if not design_status:
             outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
+        elif keep_pair_together:
+            outputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
         else:
             outputs = self.io_manager.generate_outputs_design()
         # TODO: Unit tests
@@ -91,9 +94,10 @@ class StepManager:
         makefile += "# Recipes\n"
         for i,_ in enumerate(outputs):
             if dependency is not None:
-                makefile += current_step.produce_recipe(inputs[i], outputs[i], input_dir, input_suffix) + "\n"
+                current_input = inputs[i].add_prefix(input_dir + "/").add_suffix(input_suffix)
+                makefile += current_step.produce_recipe(current_input, outputs[i]) + "\n"
             else:
-                makefile += current_step.produce_recipe(None, outputs[i], None, None) + "\n"
+                makefile += current_step.produce_recipe(None, outputs[i]) + "\n"
             makefile += "\n"
         makefile += dir_name + ":\n"
         makefile += "\tmkdir $@"
