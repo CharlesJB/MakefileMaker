@@ -21,9 +21,9 @@ class StepManager:
             sys.stderr.write(msg)
             sys.exit(1)
         self._validate_dependencies(dependency_name, "register_step: ")
-        self.steps[step.get_name()] = step
-        self.dependencies[step.get_name()] = dependency_name
-        self._validate_step(step.get_name(), "register_step: ")
+        self.steps[step.name] = step
+        self.dependencies[step.name] = dependency_name
+        self._validate_step(step.name, "register_step: ")
 
     def produce_makefile(self, step_name):
         self._validate_step_name(step_name, "get_makefile: ")
@@ -95,11 +95,11 @@ class StepManager:
 
     def get_merge(self, step_name):
         self._validate_step_name(step_name, "get_merge: ")
-        return(self.steps[step_name].get_merge_status())
+        return(self.steps[step_name].merge_status)
 
     def get_pair(self, step_name):
         self._validate_step_name(step_name, "get_pair: ")
-        return(self.steps[step_name].get_pair_status())
+        return(self.steps[step_name].pair_status)
 
     def get_merged(self, step_name):
         self._validate_step_name(step_name, "get_merged: ")

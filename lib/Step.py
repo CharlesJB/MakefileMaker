@@ -18,6 +18,7 @@ class Step:
         self.merge_status = False
         self.pair_status = False
         self.keep_pair_together_status = False
+        self.design_status = False
         self._set_step_specific_values()
         self.config_files = config_files
 
@@ -27,18 +28,6 @@ class Step:
         # Prepare config file
         self._set_default_params()
         self._parse_config()
-
-    def get_name(self):
-        return(self.name)
-
-    def get_merge_status(self):
-        return(self.merge_status)
-
-    def get_pair_status(self):
-        return(self.pair_status)
-
-    def get_keep_pair_together_status(self):
-        return(self.keep_pair_together_status)
 
     # To implement in each Step
     def get_step_specific_variables(self):
@@ -104,10 +93,10 @@ class Step:
             msg += "outputs should be a FileList."
             error = True
         else:
-            if self.get_pair_status() and outputs.get_paired_status():
+            if self.pair_status and outputs.get_paired_status():
                 msg += "outputs cannot be paired when pair status is True."
                 error = True
-            if self.get_merge_status() and outputs.get_file_count() > 1:
+            if self.merge_status and outputs.get_file_count() > 1:
                 msg += "outputs FileList cannot contain more than 1 file when merge status is True."
                 error = True
         if error == True:

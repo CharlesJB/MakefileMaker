@@ -47,23 +47,11 @@ def test_dummy_step_constructor_invalid_config_file():
 
 def test_dummy_step_get_name():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_name(), "DummyStep")
+    eq_(ds.name, "DummyStep")
 
 def test_dummy_step_get_dir_name():
     ds = DummyStep([VALID_CONFIG_FILE_1])
     eq_(ds.params['dir_name'], "Dummy")
-
-def test_dummy_step_get_pair_status():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_pair_status(), True)
-
-def test_dummy_step_get_merge_status():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_merge_status(), True)
-
-def test_dummy_step_get_keep_pair_together_status():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    eq_(ds.get_keep_pair_together_status(), False)
 
 def test_dummy_step_get_step_specific_variables():
     ds = DummyStep([VALID_CONFIG_FILE_1])
