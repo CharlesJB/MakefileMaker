@@ -49,17 +49,58 @@ class IOManager:
     def generate_inputs(self, merged, paired, merge, pair):
         inputs = []
         for name in self.raw_files.keys():
-            inputs += self.generate_input(name, merged, paired, merge, pair)
+            inputs += self._generate_input(name, merged, paired, merge, pair)
         return(inputs)
 
-    def generate_input(self, name, merged, paired, merge, pair):
+    def generate_outputs(self, merged, paired, merge, pair):
+        outputs = []
+        for name in self.raw_files.keys():
+            outputs += self._generate_output(name, merged, paired, merge, pair)
+        return(outputs)
+
+    def _get_files(self, idx, name, merge):
+        if name is None:
+            fastq_list = self.raw_files
+        elif name in self.raw_files:
+            fastq_list = { name: self.raw_files[name] }
+        else:
+            return(None)
+
+        to_return = []
+        for file_list in fastq_list.values():
+            if idx == 0:
+                to_return += file_list.unlist_file1(merge)
+            else:
+                to_return += file_list.unlist_file2(merge)
+
+        return(to_return)
+
+    def _validate_raw_files(self):
+        error = False
+        msg = ""
+        if not isinstance(self.raw_files, dict):
+            msg += "IOManager, _valid: raw_files should be a dict.\n"
+            error = True
+        elif len(self.raw_files) < 1:
+            msg += "IOManager, _valid: raw_files should have at least 1 FileList.\n"
+            error = True
+        else:
+            for file_list in self.raw_files.values():
+                if not isinstance(file_list, FileList):
+                    msg += "IOManager, _valid: raw_files entries should be FileList.\n"
+                    error = True
+        if error == True:
+            sys.stderr.write(msg)
+            sys.exit(1)
+
+    def _generate_input(self, name, merged, paired, merge, pair):
         if name not in self.raw_files:
-            msg = "generate_input: invalid name"
+            msg = "_generate_input: invalid name"
             sys.stderr.write(msg)
             sys.exit(1)
 
         if paired and pair or merged and merge:
-            msg = "generate_input: invalid combination of arguments."
+            msg = "_generate_input: invalid combination of arguments."
             sys.stderr.write(msg)
             sys.exit(1)
 
@@ -191,20 +232,15 @@ class IOManager:
 
         return(results)
 
-    def generate_outputs(self, merged, paired, merge, pair):
-        outputs = []
-        for name in self.raw_files.keys():
-            outputs += self.generate_output(name, merged, paired, merge, pair)
-        return(outputs)
 
-    def generate_output(self, name, merged, paired, merge, pair):
+    def _generate_output(self, name, merged, paired, merge, pair):
         if name not in self.raw_files:
-            msg = "generate_input: invalid name"
+            msg = "_generate_output: invalid name"
             sys.stderr.write(msg)
             sys.exit(1)
 
         if paired and pair or merged and merge:
-            msg = "generate_output: invalid combination of arguments."
+            msg = "_generate_output: invalid combination of arguments."
             sys.stderr.write(msg)
             sys.exit(1)
 
@@ -289,38 +325,3 @@ class IOManager:
             results.append(file_list)
 
         return(results)
-
-    def _get_files(self, idx, name, merge):
-        if name is None:
-            fastq_list = self.raw_files
-        elif name in self.raw_files:
-            fastq_list = { name: self.raw_files[name] }
-        else:
-            return(None)
-
-        to_return = []
-        for file_list in fastq_list.values():
-            if idx == 0:
-                to_return += file_list.unlist_file1(merge)
-            else:
-                to_return += file_list.unlist_file2(merge)
-
-        return(to_return)
-
-    def _validate_raw_files(self):
-        error = False
-        msg = ""
-        if not isinstance(self.raw_files, dict):
-            msg += "IOManager, _valid: raw_files should be a dict.\n"
-            error = True
-        elif len(self.raw_files) < 1:
-            msg += "IOManager, _valid: raw_files should have at least 1 FileList.\n"
-            error = True
-        else:
-            for file_list in self.raw_files.values():
-                if not isinstance(file_list, FileList):
-                    msg += "IOManager, _valid: raw_files entries should be FileList.\n"
-                    error = True
-        if error == True:
-            sys.stderr.write(msg)
-            sys.exit(1)
