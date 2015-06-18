@@ -59,7 +59,7 @@ def test_dummy_step_get_step_specific_variables():
 
 def test_dummy_step_produce_recipe():
     ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe(FILE_LIST_PAIRED_2, FILE_LIST_UNPAIRED_1)
+    recipe = ds.produce_recipe([FILE_LIST_PAIRED_2], FILE_LIST_UNPAIRED_1)
     eq_(recipe, 'Dummy/1_R1.txt: 2_R1 2_R2\n\t@echo $@\n\t@echo $^\n')
 
 def test_dummy_step_produce_recipe_empty_input():
@@ -74,8 +74,8 @@ def test_dummy_step_produce_recipe_invalid_input_length():
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_input_class():
-    ds = DummyStep([VALID_CONFIG_FILE_1])
-    recipe = ds.produce_recipe([FILE_LIST_PAIRED_1], FILE_LIST_UNPAIRED_1)
+    ds = DummyStep(VALID_CONFIG_FILE_1)
+    recipe = ds.produce_recipe(FILE_LIST_PAIRED_1, FILE_LIST_UNPAIRED_1)
 
 @raises(SystemExit)
 def test_dummy_step_produce_recipe_invalid_output_class():

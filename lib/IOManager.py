@@ -45,15 +45,17 @@ class IOManager:
 
     # TODO: Unit tests
     def generate_inputs_raw_data(self, merge, pair):
-        results = []
+        raw_files = []
         for file_list in self.raw_files.values():
-            results += file_list.split(merge, pair)
-        return(results)
+            for file_name in file_list.split(merge, pair):
+                raw_files.append([file_name])
+        return(raw_files)
 
     def generate_inputs(self, merged, paired, merge, pair):
         inputs = []
         for name in self.raw_files.keys():
-            inputs += self._generate_input(name, merged, paired, merge, pair)
+            for inpt in self._generate_input(name, merged, paired, merge, pair):
+                inputs.append([inpt])
         return(inputs)
 
     def generate_outputs(self, merged, paired, merge, pair):
@@ -62,17 +64,26 @@ class IOManager:
             outputs += self._generate_output(name, merged, paired, merge, pair)
         return(outputs)
 
+    def generate_outputs_pair(self, merged, paired, merge, pair):
+        outputs = []
+        for name in self.raw_files.keys():
+            outputs += self._generate_input(name, merged, paired, merge, True)
+        return(outputs)
+
     def generate_inputs_design(self):
         if self.design_manager is not None:
             inputs = []
             for design_name in self.design_manager.get_design_names():
-                inputs += self._generate_input_design(design_name)
+                inputs.append(self._generate_input_design(design_name))
             return(inputs)
         return(None)
 
     def generate_outputs_design(self):
         if self.design_manager is not None:
-            return(self.design_manager.get_design_names())
+            outputs = []
+            for design_name in self.design_manager.get_design_names():
+                outputs.append(FileList([[design_name, '']]))
+            return(outputs)
         return(None)
 
     def _get_files(self, idx, name, merge):
@@ -114,7 +125,11 @@ class IOManager:
         inpt = []
         dm = self.design_manager
         for group in self.design_manager.get_groups(design_name):
-            inpt.append(dm.get_group_names(design_name, group_name))
+            group_names = dm.get_group_names(design_name, group)
+            file_list = []
+            for name in group_names:
+                file_list.append([name, ''])
+            inpt.append(FileList(file_list))
         return(inpt)
 
     def _generate_input(self, name, merged, paired, merge, pair):

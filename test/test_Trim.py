@@ -6,7 +6,7 @@ VALID_SAMPLESHEET = "raw_data/valid_samplesheet.txt"
 VALID_CONFIG="raw_data/valid.ini"
 IO_MANAGER = IOManager(VALID_SAMPLESHEET)
 
-def test_symlinks_step_constructor():
+def test_trim_step_constructor():
     trim = Trim([VALID_CONFIG])
     eq_(trim.name, "Trim")
     eq_(trim.params['dir_name'], "trim")
@@ -15,7 +15,7 @@ def test_symlinks_step_constructor():
     eq_(trim.keep_pair_together_status, True)
     eq_(trim.get_step_specific_variables(), None)
     inputs = IO_MANAGER.generate_inputs(False, False, False, True)
-    outputs = IO_MANAGER.generate_inputs(False, False, False, True)
+    outputs = IO_MANAGER.generate_outputs_pair(False, False, False, True)
     eq_(len(inputs), len(outputs))
     exp = "trim/test1_R1.trim.fastq.gz trim/test1_R2.trim.fastq.gz: test1_R1 test1_R2\n"
     exp += "\tjava -jar ${TRIMMOMATIC_JAR} \\\n"

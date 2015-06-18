@@ -40,7 +40,10 @@ class Step:
         target = " ".join(outputs.unlist(self.params['dir_name'], self.params['suffix']))
         dependencies = inputs
         if inputs is not None:
-            dependencies  = " ".join(inputs.unlist())
+            dependencies = []
+            for inpt in inputs:
+                dependencies += inpt.unlist()
+            dependencies  = " ".join(dependencies)
             recipe = target + ": " + dependencies + "\n"
         else:
             recipe = target + ":\n"
@@ -86,9 +89,15 @@ class Step:
     def _validate_params(self, inputs, outputs):
         msg = "Step: _validate_params: "
         error = False
-        if inputs is not None and not isinstance(inputs, FileList) and inputs != "":
-            msg += "inputs/outputs should be FileList."
-            error = True
+        if inputs is not None:
+            if not isinstance(inputs, list):
+                msg += "inputs should be FileList."
+                error = True
+            else:
+                for value in inputs:
+                    if not isinstance(value, FileList):
+                        msg += "inputs values should be FileList."
+                        error = True
         if not isinstance(outputs, FileList):
             msg += "outputs should be a FileList."
             error = True

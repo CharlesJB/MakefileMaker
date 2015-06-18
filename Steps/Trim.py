@@ -19,11 +19,11 @@ class Trim(Step):
         dir_name = self.params['dir_name']
         suffix = self.params['suffix']
         command = "\tjava -jar ${TRIMMOMATIC_JAR} \\\n"
-        if dependencies.get_paired_status():
+        if dependencies[0].get_paired_status():
             command += "\t\tPE --phred" + str(self.params['phred']) + " \\\n"
-            command += "\t\t" + dependencies.unlist()[0]
-            if dependencies.get_paired_status():
-                command += " " + dependencies.unlist()[1]
+            command += "\t\t" + dependencies[0].unlist()[0]
+            if dependencies[0].get_paired_status():
+                command += " " + dependencies[0].unlist()[1]
             command += " \\\n"
             base_output = dir_name + "/" + outputs.unlist()[0]
             command += "\t\t" + base_output + suffix + " \\\n"

@@ -48,12 +48,14 @@ class StepManager:
         if not design_status:
             outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
         elif keep_pair_together:
-            outputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
+            outputs = self.io_manager.generate_outputs_pair(merged, paired, merge, pair)
         else:
             outputs = self.io_manager.generate_outputs_design()
         # TODO: Unit tests
         if dependency is "raw_data":
             inputs = self.io_manager.generate_inputs_raw_data(merge, pair)
+        elif keep_pair_together:
+            inputs = self.io_manager.generate_inputs(merged, paired, merge, True)
         elif dependency is not None:
             if not design_status:
                 inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
@@ -92,12 +94,14 @@ class StepManager:
  
         # 4. Recipes
         makefile += "# Recipes\n"
-        for i,_ in enumerate(outputs):
+        for i,output in enumerate(outputs):
             if dependency is not None:
-                current_input = inputs[i].add_prefix(input_dir + "/").add_suffix(input_suffix)
-                makefile += current_step.produce_recipe(current_input, outputs[i]) + "\n"
+                current_inputs = []
+                for inpt in inputs[i]:
+                    current_inputs.append(inpt.add_prefix(input_dir + "/").add_suffix(input_suffix))
+                makefile += current_step.produce_recipe(current_inputs, output) + "\n"
             else:
-                makefile += current_step.produce_recipe(None, outputs[i]) + "\n"
+                makefile += current_step.produce_recipe(None, output) + "\n"
             makefile += "\n"
         makefile += dir_name + ":\n"
         makefile += "\tmkdir $@"
