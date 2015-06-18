@@ -6,7 +6,7 @@ VALID_SAMPLESHEET = "raw_data/valid_samplesheet.txt"
 VALID_CONFIG="raw_data/valid.ini"
 IO_MANAGER = IOManager(VALID_SAMPLESHEET)
 
-def test_symlinks_step_constructor():
+def test_align_step_constructor():
     align = Align([VALID_CONFIG])
     eq_(align.name, "Align")
     eq_(align.params['dir_name'], "align")
