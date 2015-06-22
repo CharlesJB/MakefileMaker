@@ -17,7 +17,7 @@ class StepManager:
 
     def register_step(self, step, dependency_name):
         if not isinstance(step, Step):
-            msg = "register_step: invalid step class."
+            msg = "register_step: invalid step class.\n"
             sys.stderr.write(msg)
             sys.exit(1)
         self._validate_dependencies(dependency_name, "register_step: ")
@@ -45,17 +45,19 @@ class StepManager:
         paired = self.get_paired(step_name)
         merge = self.get_merge(step_name)
         pair = self.get_pair(step_name)
-        if not design_status:
-            outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
+        if design_status:
+            outputs = self.io_manager.generate_outputs_design()
         elif keep_pair_together:
             outputs = self.io_manager.generate_outputs_pair(merged, paired, merge, pair)
         else:
-            outputs = self.io_manager.generate_outputs_design()
+            outputs = self.io_manager.generate_outputs(merged, paired, merge, pair)
         # TODO: Unit tests
+        if keep_pair_together:
+            pair = True
         if dependency is "raw_data":
             inputs = self.io_manager.generate_inputs_raw_data(merge, pair)
-        elif keep_pair_together:
-            inputs = self.io_manager.generate_inputs(merged, paired, merge, True)
+#        elif keep_pair_together:
+#            inputs = self.io_manager.generate_inputs(merged, paired, merge, True)
         elif dependency is not None:
             if not design_status:
                 inputs = self.io_manager.generate_inputs(merged, paired, merge, pair)
@@ -63,7 +65,7 @@ class StepManager:
                 inputs = self.io_manager.generate_inputs_design()
         if dependency is "raw_data" or dependency is not None:
             if len(inputs) != len(outputs):
-                msg = "produce_makefile: len(inputs) != len(outputs)."
+                msg = "produce_makefile: len(inputs) != len(outputs).\n"
                 sys.stderr.write(msg)
                 sys.exit(1)
 
@@ -98,7 +100,10 @@ class StepManager:
             if dependency is not None:
                 current_inputs = []
                 for inpt in inputs[i]:
-                    current_inputs.append(inpt.add_prefix(input_dir + "/").add_suffix(input_suffix))
+                    if dependency is not "raw_data":
+                        current_inputs.append(inpt.add_prefix(input_dir + "/").add_suffix(input_suffix))
+                    else:
+                        current_inputs.append(inpt)
                 makefile += current_step.produce_recipe(current_inputs, output) + "\n"
             else:
                 makefile += current_step.produce_recipe(None, output) + "\n"
@@ -109,14 +114,20 @@ class StepManager:
         return(makefile)
 
     def get_merge(self, step_name):
+        if step_name == "raw_data":
+            return(False)
         self._validate_step_name(step_name, "get_merge: ")
         return(self.steps[step_name].merge_status)
 
     def get_pair(self, step_name):
+        if step_name == "raw_data":
+            return(False)
         self._validate_step_name(step_name, "get_pair: ")
         return(self.steps[step_name].pair_status)
 
     def get_merged(self, step_name):
+        if step_name == "raw_data":
+            return(False)
         self._validate_step_name(step_name, "get_merged: ")
         dependency = self.dependencies[step_name]
         if dependency is None:
@@ -128,6 +139,8 @@ class StepManager:
         return(False)
 
     def get_paired(self, step_name):
+        if step_name == "raw_data":
+            return(False)
         self._validate_step_name(step_name, "get_paired: ")
         dependency = self.dependencies[step_name]
         if dependency is None:
@@ -143,10 +156,10 @@ class StepManager:
         msg = base_msg
         if dependency is not None and dependency is not "raw_data":
             if not isinstance(dependency, basestring) or len(dependency) < 1:
-                msg += "dependency must be a basestring."
+                msg += "dependency must be a basestring.\n"
                 error = True
             elif dependency not in self.dependencies:
-                msg += "missing dependency " + dependency + "."
+                msg += "missing dependency " + dependency + ".\n"
                 error = True
         if error:
             sys.stderr.write(msg)
@@ -157,11 +170,11 @@ class StepManager:
         msg = base_msg
         # Valid merge
         if self.get_merged(step_name) and self.get_merge(step_name):
-            msg += "error in step " + step_name + ", cannot merge twice."
+            msg += "error in step " + step_name + ", cannot merge twice.\n"
             error = True
         # Valid pair
         if self.get_paired(step_name) and self.get_pair(step_name):
-            msg += "error in step " + step_name + ", cannot pair twice."
+            msg += "error in step " + step_name + ", cannot pair twice.\n"
             error = True
         if error:
             sys.stderr.write(msg)
@@ -169,8 +182,8 @@ class StepManager:
 
     def _validate_step_name(self, step_name, base_msg):
         msg = base_msg
-        if step_name not in self.steps:
-            msg += "Invalid step_name."
+        if step_name not in self.steps and step_name != "raw_data":
+            msg += "Invalid step_name: " + step_name + "\n"
             sys.stderr.write(msg)
             sys.exit(1)
 

@@ -15,11 +15,11 @@ class Sort(Step):
         self.pair_status = False
 
     def _get_command(self, dependencies, outputs):
-        command = "samtools sort \\\n"
-        command += "-O bam \\\n"
-        command += "-T $@.tmp \\\n"
-        command += "-@ " + str(self.params['threads']) + "\\\n"
-        command += "$< > $@"
+        command = "\tsamtools sort \\\n"
+        command += "\t\t-O bam \\\n"
+        command += "\t\t-T $@.tmp \\\n"
+        command += "\t\t-@ " + str(self.params['threads']) + " \\\n"
+        command += "\t\t$< > $@"
         return(command)
 
     def _set_default_params(self):

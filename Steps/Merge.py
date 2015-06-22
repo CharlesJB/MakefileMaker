@@ -15,7 +15,7 @@ class Merge(Step):
         self.pair_status = False
 
     def _get_command(self, dependencies, outputs):
-        command = "samtools merge $^ > $@"
+        command = "\tsamtools merge $^ > $@"
         return(command)
 
     def _set_default_params(self):

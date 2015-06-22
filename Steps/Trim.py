@@ -33,11 +33,12 @@ class Trim(Step):
             command += "\t\t" + base_output + ".unpaired" + suffix + " \\\n"
         else:
             command += "\t\tSE --phred" + str(self.params['phred']) + " \\\n"
-            command += "\t\t" + dependencies.unlist()[0] + " \\\n"
+            command += "\t\t" + dependencies[0].unlist()[0] + " \\\n"
             command += "\t\t" + outputs.unlist()[0] + " \\\n"
-        command += "\t\tILLUMINACLIP:" + self.params['ILLUMINACLIP'] + " \\\n"
+        command += "\t\tILLUMINACLIP:" + self.params['adaptors']
+        command += ":" + self.params['ILLUMINACLIP'] + " \\\n"
         command += "\t\tMINLEN:" + str(self.params['MINLEN']) + " \\\n"
-        command += "\t\tTRAILING:" + str(self.params['TRAILING']) + " \\\n"
+        command += "\t\tTRAILING:" + str(self.params['TRAILING'])
         return(command)
 
     def _set_default_params(self):
