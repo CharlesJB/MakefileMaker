@@ -20,7 +20,7 @@ class Trim(Step):
         suffix = self.params['suffix']
         command = "\tjava -jar ${TRIMMOMATIC_JAR} \\\n"
         if dependencies[0].get_paired_status():
-            command += "\t\tPE --phred" + str(self.params['phred']) + " \\\n"
+            command += "\t\tPE -phred" + str(self.params['phred']) + " \\\n"
             command += "\t\t" + dependencies[0].unlist()[0]
             if dependencies[0].get_paired_status():
                 command += " " + dependencies[0].unlist()[1]
@@ -32,7 +32,7 @@ class Trim(Step):
             command += "\t\t" + base_output + suffix + " \\\n"
             command += "\t\t" + base_output + ".unpaired" + suffix + " \\\n"
         else:
-            command += "\t\tSE --phred" + str(self.params['phred']) + " \\\n"
+            command += "\t\tSE -phred" + str(self.params['phred']) + " \\\n"
             command += "\t\t" + dependencies[0].unlist()[0] + " \\\n"
             command += "\t\t" + outputs.unlist()[0] + " \\\n"
         command += "\t\tILLUMINACLIP:" + self.params['adaptors']
