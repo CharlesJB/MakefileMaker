@@ -18,16 +18,16 @@ def test_sort_step_constructor():
     outputs = IO_MANAGER.generate_outputs(False, False, False, True)
     eq_(len(inputs), len(outputs))
     exp = "align/test1.sort.bam: test1_R1 test1_R2\n"
-    exp += "samtools sort \\\n"
-    exp += "-O bam \\\n"
-    exp += "-T $@.tmp \\\n"
-    exp += "-@ 1\\\n"
-    exp += "$< > $@"
+    exp += "\tsamtools sort \\\n"
+    exp += "\t\t-O bam \\\n"
+    exp += "\t\t-T $@.tmp \\\n"
+    exp += "\t\t-@ 1 \\\n"
+    exp += "\t\t$< > $@"
     eq_(sort.produce_recipe(inputs[0], outputs[0]), exp)
     exp = "align/test2.sort.bam: test2_R1 test2_R2\n"
-    exp += "samtools sort \\\n"
-    exp += "-O bam \\\n"
-    exp += "-T $@.tmp \\\n"
-    exp += "-@ 1\\\n"
-    exp += "$< > $@"
+    exp += "\tsamtools sort \\\n"
+    exp += "\t\t-O bam \\\n"
+    exp += "\t\t-T $@.tmp \\\n"
+    exp += "\t\t-@ 1 \\\n"
+    exp += "\t\t$< > $@"
     eq_(sort.produce_recipe(inputs[1], outputs[1]), exp)
