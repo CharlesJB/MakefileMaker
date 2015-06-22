@@ -18,8 +18,8 @@ def test_merge_step_constructor():
     outputs = IO_MANAGER.generate_outputs(False, False, False, True)
     eq_(len(inputs), len(outputs))
     exp = "align/test1.merged.bam: test1_R1 test1_R2\n"
-    exp += "samtools merge $^ > $@"
+    exp += "\tsamtools merge $^ > $@"
     eq_(merge.produce_recipe(inputs[0], outputs[0]), exp)
     exp = "align/test2.merged.bam: test2_R1 test2_R2\n"
-    exp += "samtools merge $^ > $@"
+    exp += "\tsamtools merge $^ > $@"
     eq_(merge.produce_recipe(inputs[1], outputs[1]), exp)
